@@ -90,7 +90,7 @@ export const menuItems: MenuItem[] = [
   {
     id: '8',
     name: 'Aloo Tikki Burger',
-    description: 'Whether you're a spice enthusiast or a curious palate adventurer, our Aloo...',
+    description: 'Whether you\'re a spice enthusiast or a curious palate adventurer, our Aloo...',
     price: '$50.00',
     image: '/images/food/burger3.jpg',
     rating: 4.5,
