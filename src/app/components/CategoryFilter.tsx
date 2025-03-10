@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { categories, Category } from '../data/menuData';
+import Link from 'next/link';
 
 interface CategoryFilterProps {
   activeCategory: string;
@@ -20,8 +21,8 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
           onClick={() => onCategoryChange(category.id)}
           className={`flex items-center gap-2 px-6 py-2 rounded-full transition-all ${
             activeCategory === category.id
-              ? 'bg-red-500 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              ? 'bg-orange-500 text-white'
+              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
           }`}
         >
           <span className="text-xl">{category.icon}</span>
@@ -29,11 +30,12 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
         </button>
       ))}
       
-      <button 
-        className="bg-red-500 text-white px-6 py-2 rounded-full ml-auto"
+      <Link 
+        href="/menu"
+        className="bg-orange-500 text-white px-6 py-2 rounded-full ml-auto hover:bg-orange-600"
       >
         View All
-      </button>
+      </Link>
     </div>
   );
 };

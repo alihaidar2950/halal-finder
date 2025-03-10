@@ -3,6 +3,7 @@
 import React from 'react';
 import { MenuItem } from '../data/menuData';
 import PlaceholderImage from './PlaceholderImage';
+import Link from 'next/link';
 
 interface MenuCardProps {
   item: MenuItem;
@@ -10,12 +11,12 @@ interface MenuCardProps {
 
 const MenuCard: React.FC<MenuCardProps> = ({ item }) => {
   return (
-    <div className="bg-white rounded-lg overflow-hidden shadow-md transition-transform hover:shadow-lg hover:scale-[1.01]">
+    <div className="bg-gray-800 rounded-lg overflow-hidden shadow-md transition-transform hover:shadow-lg hover:scale-[1.01] border border-gray-700">
       <div className="relative h-60 w-full">
-        <div className="absolute top-2 right-2 bg-amber-500 text-white text-sm font-bold px-2 py-1 rounded z-10">
+        <div className="absolute top-2 right-2 bg-orange-500 text-white text-sm font-bold px-2 py-1 rounded z-10">
           New
         </div>
-        <div className="absolute bottom-2 right-2 bg-white bg-opacity-90 text-gray-800 px-2 py-1 rounded flex items-center z-10">
+        <div className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white px-2 py-1 rounded flex items-center z-10">
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
             className="h-4 w-4 text-yellow-500" 
@@ -32,10 +33,16 @@ const MenuCard: React.FC<MenuCardProps> = ({ item }) => {
         />
       </div>
       <div className="p-4">
-        <h3 className="text-lg font-bold text-gray-800">{item.name}</h3>
-        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{item.description}</p>
+        <h3 className="text-lg font-bold text-gray-100">{item.name}</h3>
+        <p className="text-sm text-gray-400 mt-1 line-clamp-2">{item.description}</p>
         <div className="flex justify-between items-center mt-4">
-          <span className="text-red-500 font-bold">{item.price}</span>
+          <span className="text-orange-500 font-bold">{item.price}</span>
+          <Link 
+            href={`/item/${item.id}`}
+            className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-xs rounded-full text-white"
+          >
+            View Details
+          </Link>
         </div>
       </div>
     </div>

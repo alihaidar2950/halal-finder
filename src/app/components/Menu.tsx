@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { menuItems } from '../data/menuData';
 import MenuCard from './MenuCard';
 import CategoryFilter from './CategoryFilter';
+import Link from 'next/link';
 
 const Menu: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState('all');
@@ -15,11 +16,11 @@ const Menu: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="text-center mb-12">
-        <h1 className="text-5xl font-bold italic mb-6 text-gray-800">Menu Style 3</h1>
-        <div className="inline-flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full">
-          <span>Home</span>
+        <h1 className="text-5xl font-bold italic mb-6 text-orange-500">Our Menu</h1>
+        <div className="inline-flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-full">
+          <Link href="/" className="hover:text-gray-200">Home</Link>
           <span>/</span>
-          <span>Menu Style 3</span>
+          <span>Menu</span>
         </div>
       </div>
 
