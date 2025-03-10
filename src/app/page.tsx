@@ -1,4 +1,4 @@
-import RestaurantList from "./components/RestaurantList";
+import RestaurantList from "../components/RestaurantList";
 import Link from "next/link";
 
 export default function Home() {
