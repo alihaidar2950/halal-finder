@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Client } from '@googlemaps/google-maps-services-js';
+import { classifyHalalStatus } from '@/utils/halal/classifier';
 
 // Initialize Google Maps client
 const client = new Client({});
@@ -8,7 +9,8 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const placeId = params.id;
+  // Convert params to a plain value to avoid the async params issue
+  const placeId = String(params.id);
 
   if (!placeId) {
     return NextResponse.json(
@@ -46,10 +48,10 @@ export async function GET(
 
     // Format the restaurant data to match our application model
     const restaurant = {
-      id: place.place_id,
-      name: place.name,
+      id: place.place_id || placeId,
+      name: place.name || 'Unknown Restaurant',
       description: place.types?.join(', ') || '',
-      address: place.formatted_address || place.vicinity,
+      address: place.formatted_address || place.vicinity || '',
       phone: place.formatted_phone_number || '',
       cuisineType: inferCuisineType(place.types || []),
       priceRange: place.price_level ? '$'.repeat(place.price_level) : '$$',
@@ -66,18 +68,33 @@ export async function GET(
       website: place.website || '',
       reviewCount: place.user_ratings_total || 0,
       hours: parseOpeningHours(place.opening_hours),
-      reviews: place.reviews?.map((review: any) => ({
+      reviews: place.reviews?.map((review: { 
+        author_name: string; 
+        rating: number; 
+        text: string; 
+        relative_time_description: string 
+      }) => ({
         author: review.author_name,
         rating: review.rating,
         text: review.text,
         time: review.relative_time_description,
       })) || [],
-      photos: place.photos?.slice(0, 5).map((photo: any) => 
+      photos: place.photos?.slice(0, 5).map((photo: { photo_reference: string }) => 
         `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photo.photo_reference}&key=${process.env.GOOGLE_MAPS_API_KEY}`
       ) || [],
     };
 
-    return NextResponse.json({ restaurant });
+    // Classify halal status
+    const { status, confidence } = classifyHalalStatus(restaurant);
+    
+    // Add classification to restaurant data
+    const classifiedRestaurant = {
+      ...restaurant,
+      halalStatus: status,
+      halalConfidence: confidence
+    };
+
+    return NextResponse.json({ restaurant: classifiedRestaurant });
   } catch (error) {
     console.error('Error fetching restaurant details:', error);
     return NextResponse.json(
@@ -88,7 +105,7 @@ export async function GET(
 }
 
 // Helper function to parse opening hours
-function parseOpeningHours(openingHours: any) {
+function parseOpeningHours(openingHours?: { weekday_text?: string[] }) {
   if (!openingHours || !openingHours.weekday_text) {
     return [];
   }

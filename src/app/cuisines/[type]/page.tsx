@@ -1,12 +1,16 @@
 "use client";
 
 import React from 'react';
+import { useParams } from 'next/navigation';
 import { cuisineTypes, restaurants } from '@/data/menuData';
 import RestaurantCard from '@/components/RestaurantCard';
 import Link from 'next/link';
 
-export default function CuisinePage({ params }: { params: { type: string } }) {
-  const cuisineType = params.type;
+export default function CuisinePage() {
+  // Use the useParams hook instead of receiving params as a prop
+  const params = useParams();
+  const cuisineType = params.type as string;
+  
   const cuisine = cuisineTypes.find(c => c.id === cuisineType);
   
   // Filter restaurants by cuisine type

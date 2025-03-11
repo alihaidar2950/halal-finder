@@ -1,3 +1,6 @@
+// Define halal classification levels
+export type HalalStatus = 'fully_halal' | 'halal_options' | 'halal_ingredients' | 'unknown';
+
 export interface Restaurant {
   id: string;
   name: string;
@@ -24,6 +27,9 @@ export interface Restaurant {
   }>;
   reviewCount?: number;
   formattedDistance?: string;
+  // Halal classification
+  halalStatus?: HalalStatus;
+  halalConfidence?: number; // 0-1 confidence score
 }
 
 export interface CuisineType {

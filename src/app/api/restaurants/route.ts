@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Client, PlaceType1 } from '@googlemaps/google-maps-services-js';
+import { classifyHalalStatus } from '@/utils/halal/classifier';
 
 // Initialize Google Maps client
 const client = new Client({});
@@ -34,26 +35,39 @@ export async function GET(request: Request) {
     });
 
     // Map Google Places data to our application's format
-    const restaurants = response.data.results.map(place => ({
-      id: place.place_id,
-      name: place.name,
-      address: place.vicinity,
-      cuisineType: 'halal', // Default, as we're searching for halal restaurants
-      rating: place.rating || 0,
-      priceRange: place.price_level ? '$'.repeat(place.price_level) : '$$',
-      coordinates: {
-        lat: place.geometry?.location.lat || 0,
-        lng: place.geometry?.location.lng || 0,
-      },
-      // Use the first photo if available
-      image: place.photos?.[0]
-        ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${process.env.GOOGLE_MAPS_API_KEY}`
-        : undefined,
-      // We'll need to fetch these details separately
-      phone: '',
-      description: place.types?.join(', ') || '',
-      distance: 0, // Will be calculated client-side
-    }));
+    const restaurants = response.data.results.map(place => {
+      // Basic restaurant data
+      const restaurant = {
+        id: place.place_id || `temp-${Math.random().toString(36).substring(2, 9)}`,
+        name: place.name || 'Unnamed Restaurant',
+        address: place.vicinity || 'Unknown Location',
+        cuisineType: 'halal', // Default, as we're searching for halal restaurants
+        rating: place.rating || 0,
+        priceRange: place.price_level ? '$'.repeat(place.price_level) : '$$',
+        coordinates: {
+          lat: place.geometry?.location.lat || 0,
+          lng: place.geometry?.location.lng || 0,
+        },
+        // Use the first photo if available
+        image: place.photos?.[0]
+          ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${process.env.GOOGLE_MAPS_API_KEY}`
+          : undefined,
+        // We'll need to fetch these details separately
+        phone: '',
+        description: place.types?.join(', ') || '',
+        distance: 0, // Will be calculated client-side
+      };
+      
+      // Classify halal status based on available data
+      const { status, confidence } = classifyHalalStatus(restaurant);
+      
+      // Add classification to restaurant data
+      return {
+        ...restaurant,
+        halalStatus: status,
+        halalConfidence: confidence
+      };
+    });
 
     return NextResponse.json({ restaurants });
   } catch (error) {

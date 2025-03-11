@@ -4,13 +4,14 @@ import React from 'react';
 import { Restaurant } from '@/data/menuData';
 import PlaceholderImage from './PlaceholderImage';
 import Link from 'next/link';
+import HalalStatusBadge from './halal/HalalStatusBadge';
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
 }
 
 export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
-  const { id, name, cuisineType, priceRange, rating, address, phone, image } = restaurant;
+  const { id, name, cuisineType, priceRange, rating, address, phone, image, halalStatus } = restaurant;
   
   return (
     <Link href={`/restaurants/${id}`} className="group">
@@ -28,6 +29,11 @@ export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
           <div className="absolute top-3 right-3 bg-orange-500 text-white font-bold py-1 px-3 rounded-full text-sm shadow-md">
             {rating} ★
           </div>
+          {halalStatus && (
+            <div className="absolute top-3 left-3 shadow-md">
+              <HalalStatusBadge status={halalStatus} size="sm" />
+            </div>
+          )}
         </div>
         
         <div className="p-5">

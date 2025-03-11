@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { MapPinIcon, PhoneIcon, StarIcon, ClockIcon, MapIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 import PlaceholderImage from '@/components/PlaceholderImage';
 import { fetchRestaurantDetails } from '@/services/restaurantService';
 import { Restaurant } from '@/data/menuData';
 import dynamic from 'next/dynamic';
+import HalalStatusInfo from '@/components/halal/HalalStatusInfo';
 
 // Import the map component dynamically to prevent SSR issues
 const GoogleMapComponent = dynamic(
@@ -14,7 +16,11 @@ const GoogleMapComponent = dynamic(
   { ssr: false }
 );
 
-export default function RestaurantDetailPage({ params }: { params: { id: string } }) {
+export default function RestaurantDetailPage() {
+  // Use the useParams hook instead of receiving params as a prop
+  const params = useParams();
+  const restaurantId = params.id as string;
+  
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +29,7 @@ export default function RestaurantDetailPage({ params }: { params: { id: string 
     const getRestaurantDetails = async () => {
       try {
         setLoading(true);
-        const data = await fetchRestaurantDetails(params.id);
+        const data = await fetchRestaurantDetails(restaurantId);
         setRestaurant(data);
         setLoading(false);
       } catch {
@@ -33,7 +39,7 @@ export default function RestaurantDetailPage({ params }: { params: { id: string 
     };
 
     getRestaurantDetails();
-  }, [params.id]);
+  }, [restaurantId]);
 
   if (loading) {
     return (
@@ -225,15 +231,10 @@ export default function RestaurantDetailPage({ params }: { params: { id: string 
             </div>
           </div>
           
-          <div className="bg-orange-50 p-6 rounded-lg border border-orange-200">
-            <h2 className="text-xl font-bold mb-2 text-orange-800">Halal Status</h2>
-            <p className="text-orange-700 mb-4">This restaurant appears in search results for halal food. We recommend verifying halal status directly with the restaurant.</p>
-            <div className="flex justify-center">
-              <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
-                Halal Options Available
-              </span>
-            </div>
-          </div>
+          <HalalStatusInfo 
+            status={restaurant.halalStatus}
+            confidence={restaurant.halalConfidence}
+          />
         </div>
       </div>
     </div>
