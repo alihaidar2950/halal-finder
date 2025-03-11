@@ -7,44 +7,37 @@ interface PlaceholderImageProps {
   className?: string;
 }
 
-const getRandomColor = (seed: string) => {
-  // Simple hash function
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = seed.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  
-  // Generate color
-  const hue = Math.abs(hash % 360);
-  return `hsl(${hue}, 70%, 75%)`;
-};
+export default function PlaceholderImage({ name, className = "" }: PlaceholderImageProps) {
+  // Generate a background color based on the name
+  const getColor = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash % 360);
+    // Use a moderate saturation and lightness for readability
+    return `hsl(${hue}, 70%, 75%)`;
+  };
 
-const PlaceholderImage: React.FC<PlaceholderImageProps> = ({ 
-  name,
-  className = ''
-}) => {
-  const bgColor = getRandomColor(name);
-  const initials = name
-    .split(' ')
-    .map(word => word[0])
-    .join('')
-    .substring(0, 2)
-    .toUpperCase();
+  // Get initials from the name
+  const getInitials = (name: string) => {
+    const words = name.split(' ');
+    if (words.length === 1) {
+      return name.substring(0, 2).toUpperCase();
+    }
+    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+  };
+
+  const bgColor = getColor(name);
+  const initials = getInitials(name);
 
   return (
-    <div
-      className={`flex items-center justify-center overflow-hidden ${className}`}
-      style={{ 
-        backgroundColor: bgColor,
-        width: '100%',
-        height: '100%',
-        position: 'relative'
-      }}
+    <div 
+      className={`flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900 text-white font-bold text-3xl ${className}`}
+      style={{ background: bgColor }}
+      aria-label={`Placeholder image for ${name}`}
     >
-      <span className="text-white text-4xl font-bold">{initials}</span>
-      <div className="absolute inset-0 bg-black opacity-20"></div>
+      {initials}
     </div>
   );
-};
-
-export default PlaceholderImage; 
+} 

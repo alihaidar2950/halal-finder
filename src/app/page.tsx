@@ -13,6 +13,7 @@ export default function Home() {
           </div>
           <nav className="hidden md:flex space-x-6">
             <Link href="/" className="hover:text-orange-400">Home</Link>
+            <Link href="/nearby" className="hover:text-orange-400">Near Me</Link>
             <Link href="/search" className="hover:text-orange-400">Restaurants</Link>
             <Link href="#cuisines" className="hover:text-orange-400">Cuisines</Link>
             <Link href="#" className="hover:text-orange-400">About</Link>
