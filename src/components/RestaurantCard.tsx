@@ -12,7 +12,7 @@ interface RestaurantCardProps {
 const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
   return (
     <div className="bg-gray-800 rounded-lg overflow-hidden shadow-md transition-transform hover:shadow-lg hover:scale-[1.01] border border-gray-700">
-      <div className="relative h-60 w-full">
+      <Link href={`/restaurants/${restaurant.id}`} className="block relative h-60 w-full">
         <div className="absolute top-2 right-2 bg-orange-500 text-white text-sm font-bold px-2 py-1 rounded z-10">
           {restaurant.cuisineType.charAt(0).toUpperCase() + restaurant.cuisineType.slice(1)}
         </div>
@@ -34,9 +34,12 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
           name={restaurant.name} 
           className="transition-transform hover:scale-110"
         />
-      </div>
+      </Link>
+      
       <div className="p-4">
-        <h3 className="text-lg font-bold text-gray-100">{restaurant.name}</h3>
+        <Link href={`/restaurants/${restaurant.id}`} className="block">
+          <h3 className="text-lg font-bold text-gray-100 hover:text-orange-400">{restaurant.name}</h3>
+        </Link>
         <p className="text-sm text-gray-400 mt-1 line-clamp-2">{restaurant.description}</p>
         
         <div className="mt-3 text-sm text-gray-400">
@@ -56,9 +59,14 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
         </div>
 
         <div className="flex justify-between items-center mt-4">
-          <span className="text-orange-500 font-bold">{restaurant.cuisineType.charAt(0).toUpperCase() + restaurant.cuisineType.slice(1)}</span>
           <Link 
-            href={`/restaurant/${restaurant.id}`}
+            href={`/cuisines/${restaurant.cuisineType}`}
+            className="text-orange-500 font-bold hover:underline"
+          >
+            {restaurant.cuisineType.charAt(0).toUpperCase() + restaurant.cuisineType.slice(1)}
+          </Link>
+          <Link 
+            href={`/restaurants/${restaurant.id}`}
             className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-xs rounded-full text-white"
           >
             View Details

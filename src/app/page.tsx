@@ -1,5 +1,6 @@
 import RestaurantList from "../components/RestaurantList";
 import Link from "next/link";
+import SearchBar from "@/components/SearchBar";
 
 export default function Home() {
   return (
@@ -10,9 +11,9 @@ export default function Home() {
             <span className="text-2xl font-bold text-orange-500">Halal Finder</span>
           </div>
           <nav className="hidden md:flex space-x-6">
-            <Link href="#" className="hover:text-orange-400">Home</Link>
-            <Link href="#" className="hover:text-orange-400">Restaurants</Link>
-            <Link href="#" className="hover:text-orange-400">Cuisines</Link>
+            <Link href="/" className="hover:text-orange-400">Home</Link>
+            <Link href="/search" className="hover:text-orange-400">Restaurants</Link>
+            <Link href="#cuisines" className="hover:text-orange-400">Cuisines</Link>
             <Link href="#" className="hover:text-orange-400">About</Link>
             <Link href="#" className="hover:text-orange-400">Contact</Link>
           </nav>
@@ -32,7 +33,48 @@ export default function Home() {
       </header>
 
       <main>
-        <RestaurantList />
+        {/* Hero Section with Search */}
+        <section className="relative bg-gray-900 py-24 mb-8">
+          <div className="absolute inset-0 bg-black opacity-50"></div>
+          
+          <div className="container mx-auto px-4 z-10 relative">
+            <div className="text-center mb-12">
+              <h1 className="text-5xl font-bold mb-4 text-white">Find <span className="text-orange-500">Halal</span> Restaurants Near You</h1>
+              <p className="text-xl text-gray-300 mb-12">Discover the best halal restaurants for any cuisine, taste, and occasion</p>
+              
+              <SearchBar />
+            </div>
+          </div>
+        </section>
+        
+        {/* Restaurant List */}
+        <section id="restaurants">
+          <RestaurantList />
+        </section>
+        
+        {/* Cuisines Section */}
+        <section id="cuisines" className="py-16 bg-gray-800">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold mb-4 text-orange-500">Explore Cuisines</h2>
+              <p className="text-gray-300">Discover restaurants by your favorite cuisine</p>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+              {/* Skip the 'all' option which is at index 0 */}
+              {[1, 2, 3, 4, 5, 6].map(index => (
+                <Link 
+                  key={index} 
+                  href={`/cuisines/${encodeURIComponent(index < 7 ? 'american' : 'indian')}`}
+                  className="bg-gray-700 hover:bg-gray-600 rounded-lg p-6 text-center transition-all"
+                >
+                  <div className="text-4xl mb-3">{index < 7 ? '🍔' : '🍛'}</div>
+                  <h3 className="font-bold">{index < 7 ? 'American' : 'Indian'}</h3>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="bg-black text-gray-300 py-12">
