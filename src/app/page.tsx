@@ -1,6 +1,7 @@
 import RestaurantList from "../components/RestaurantList";
 import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
+import { cuisineTypes } from "@/data/menuData";
 
 export default function Home() {
   return (
@@ -62,14 +63,14 @@ export default function Home() {
             
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
               {/* Skip the 'all' option which is at index 0 */}
-              {[1, 2, 3, 4, 5, 6].map(index => (
+              {cuisineTypes.slice(1).map(cuisine => (
                 <Link 
-                  key={index} 
-                  href={`/cuisines/${encodeURIComponent(index < 7 ? 'american' : 'indian')}`}
+                  key={cuisine.id} 
+                  href={`/cuisines/${encodeURIComponent(cuisine.id)}`}
                   className="bg-gray-700 hover:bg-gray-600 rounded-lg p-6 text-center transition-all"
                 >
-                  <div className="text-4xl mb-3">{index < 7 ? '🍔' : '🍛'}</div>
-                  <h3 className="font-bold">{index < 7 ? 'American' : 'Indian'}</h3>
+                  <div className="text-4xl mb-3">{cuisine.icon}</div>
+                  <h3 className="font-bold">{cuisine.name}</h3>
                 </Link>
               ))}
             </div>
