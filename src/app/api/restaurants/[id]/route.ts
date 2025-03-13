@@ -5,9 +5,11 @@ import { classifyHalalStatus } from '@/utils/halal/classifier';
 // Initialize Google Maps client
 const client = new Client({});
 
+type Params = { params: { id: string } };
+
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: Params
 ) {
   // Convert params to a plain value to avoid the async params issue
   const placeId = String(params.id);

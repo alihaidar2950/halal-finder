@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { cuisineTypes, CuisineType } from '../data/menuData';
-import Link from 'next/link';
 
 interface CuisineFilterProps {
   activeCuisine: string;

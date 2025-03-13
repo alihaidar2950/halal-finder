@@ -52,7 +52,7 @@ export default function RestaurantDetailPage() {
 
   useEffect(() => {
     fetchData();
-  }, [restaurantId]);
+  }, [restaurantId, fetchData]);
 
   const handleRefresh = () => {
     fetchData(true);

@@ -134,7 +134,7 @@ export default function FavoritesPage() {
             <Heart className="w-16 h-16 text-gray-500 mx-auto mb-4" />
             <h2 className="text-2xl font-semibold mb-2">No Favorites Yet</h2>
             <p className="text-gray-400 mb-6 max-w-md mx-auto">
-              You haven't saved any favorite restaurants yet. Explore restaurants and add them to your favorites!
+              You haven&apos;t saved any favorite restaurants yet. Explore restaurants and add them to your favorites!
             </p>
             <button
               onClick={() => router.push('/')}

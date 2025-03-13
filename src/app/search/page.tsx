@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Restaurant } from "@/data/menuData";
 import RestaurantCard from "@/components/RestaurantCard";
@@ -14,7 +14,7 @@ import {
   CACHE_EXPIRY 
 } from "@/utils/cacheUtils";
 
-export default function SearchPage() {
+function SearchContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
   const [results, setResults] = useState<Restaurant[]>([]);
@@ -145,5 +145,31 @@ export default function SearchPage() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <Link href="/" className="text-orange-500 hover:text-orange-600 flex items-center gap-2">
+            <span>←</span> Back to Home
+          </Link>
+        </div>
+        
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-6">Search Results</h1>
+          <div className="h-12 bg-gray-200 rounded-lg animate-pulse"></div>
+        </div>
+        
+        <div className="text-center py-12">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-500 border-r-transparent"></div>
+          <p className="mt-4 text-gray-600">Loading search...</p>
+        </div>
+      </div>
+    }>
+      <SearchContent />
+    </Suspense>
   );
 } 
