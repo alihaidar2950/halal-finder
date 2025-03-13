@@ -31,6 +31,8 @@ export interface Restaurant {
   halalStatus?: HalalStatus;
   halalConfidence?: number; // 0-1 confidence score
   distance?: number; // Distance in meters
+  // Cache status
+  fromCache?: boolean;
 }
 
 export interface CuisineType {

@@ -42,7 +42,7 @@ export default function SearchPage() {
         }
 
         // Generate a cache key for this specific search
-        const radius = 20000; // 20km radius
+        const radius = 40000; // 40km radius to match our largest distance filter
         const cacheKey = generateSearchCacheKey(query, location.lat, location.lng, radius);
         
         // Try to get cached results first

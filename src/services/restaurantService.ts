@@ -8,7 +8,8 @@ import {
   getFromCache,
   saveToCache,
   generateNearbyRestaurantsCacheKey,
-  CACHE_EXPIRY
+  CACHE_EXPIRY,
+  generateRestaurantDetailsCacheKey
 } from "@/utils/cacheUtils";
 
 /**
@@ -89,12 +90,16 @@ export async function fetchNearbyRestaurants(
 export async function fetchRestaurantDetails(placeId: string): Promise<Restaurant | null> {
   try {
     // Check if we have cached details for this restaurant
-    const cacheKey = `halal_finder_restaurant_${placeId}`;
+    const cacheKey = generateRestaurantDetailsCacheKey(placeId);
     const cachedDetails = getFromCache<Restaurant>(cacheKey);
     
     if (cachedDetails) {
       console.log("Using cached restaurant details");
-      return cachedDetails;
+      // Add a fromCache flag for UI indicators
+      return {
+        ...cachedDetails,
+        fromCache: true
+      };
     }
     
     // No cached details, fetch from API

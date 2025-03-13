@@ -190,26 +190,6 @@ export default function Home() {
                   <div className="mb-8">
                     <div className="flex flex-wrap gap-3 mb-4">
                       <button
-                        onClick={() => filterByMaxDistance(1)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium ${
-                          maxDistance === 1 
-                            ? "bg-orange-500 text-white" 
-                            : "bg-gray-700 text-gray-200 hover:bg-gray-600"
-                        }`}
-                      >
-                        Within 1km
-                      </button>
-                      <button
-                        onClick={() => filterByMaxDistance(3)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium ${
-                          maxDistance === 3 
-                            ? "bg-orange-500 text-white" 
-                            : "bg-gray-700 text-gray-200 hover:bg-gray-600"
-                        }`}
-                      >
-                        Within 3km
-                      </button>
-                      <button
                         onClick={() => filterByMaxDistance(5)}
                         className={`px-4 py-2 rounded-full text-sm font-medium ${
                           maxDistance === 5 
@@ -228,6 +208,26 @@ export default function Home() {
                         }`}
                       >
                         Within 10km
+                      </button>
+                      <button
+                        onClick={() => filterByMaxDistance(20)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium ${
+                          maxDistance === 20 
+                            ? "bg-orange-500 text-white" 
+                            : "bg-gray-700 text-gray-200 hover:bg-gray-600"
+                        }`}
+                      >
+                        Within 20km
+                      </button>
+                      <button
+                        onClick={() => filterByMaxDistance(40)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium ${
+                          maxDistance === 40 
+                            ? "bg-orange-500 text-white" 
+                            : "bg-gray-700 text-gray-200 hover:bg-gray-600"
+                        }`}
+                      >
+                        Within 40km
                       </button>
                     </div>
                     
@@ -260,10 +260,10 @@ export default function Home() {
                         Try increasing your search radius or try a different location.
                       </p>
                       <button
-                        onClick={() => filterByMaxDistance(maxDistance + 5)}
+                        onClick={() => filterByMaxDistance(maxDistance + 10)}
                         className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg"
                       >
-                        Increase Search Radius (+5km)
+                        Increase Search Radius (+10km)
                       </button>
                     </div>
                   )}

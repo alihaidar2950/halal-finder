@@ -9,6 +9,8 @@ import { fetchRestaurantDetails } from '@/services/restaurantService';
 import { Restaurant } from '@/data/menuData';
 import dynamic from 'next/dynamic';
 import HalalStatusInfo from '@/components/halal/HalalStatusInfo';
+import { Database, RefreshCw } from 'lucide-react';
+import { clearCache } from '@/utils/cacheUtils';
 
 // Import the map component dynamically to prevent SSR issues
 const GoogleMapComponent = dynamic(
@@ -24,22 +26,37 @@ export default function RestaurantDetailPage() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fromCache, setFromCache] = useState(false);
+
+  const fetchData = async (forceRefresh = false) => {
+    try {
+      setLoading(true);
+      
+      // If forcing refresh, clear this restaurant's cache
+      if (forceRefresh) {
+        clearCache();
+      }
+      
+      const data = await fetchRestaurantDetails(restaurantId);
+      setRestaurant(data);
+      
+      // Check if the data came from cache
+      setFromCache(!!data?.fromCache);
+      
+      setLoading(false);
+    } catch {
+      setError('Unable to fetch restaurant details. Please try again later.');
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const getRestaurantDetails = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchRestaurantDetails(restaurantId);
-        setRestaurant(data);
-        setLoading(false);
-      } catch {
-        setError('Unable to fetch restaurant details. Please try again later.');
-        setLoading(false);
-      }
-    };
-
-    getRestaurantDetails();
+    fetchData();
   }, [restaurantId]);
+
+  const handleRefresh = () => {
+    fetchData(true);
+  };
 
   if (loading) {
     return (
@@ -69,172 +86,190 @@ export default function RestaurantDetailPage() {
   const website = restaurant.website || '';
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <Link href="/" className="text-orange-500 hover:text-orange-600 flex items-center gap-2">
-          <span>←</span> Back to Home
-        </Link>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        {/* Main Content */}
-        <div className="lg:col-span-2">
-          <div className="mb-8">
-            {image ? (
-              <img 
-                src={image} 
-                alt={name} 
-                className="w-full h-80 object-cover rounded-lg shadow-lg" 
-              />
-            ) : (
-              <div className="w-full h-80">
-                <PlaceholderImage name={name} className="w-full h-full rounded-lg shadow-lg" />
-              </div>
-            )}
-          </div>
-          
-          <h1 className="text-4xl font-bold mb-2">{name}</h1>
-          
-          <div className="flex items-center gap-4 mb-4">
-            <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
-              {cuisineType.charAt(0).toUpperCase() + cuisineType.slice(1)}
-            </span>
-            <span className="text-gray-600">{priceRange}</span>
-            <div className="flex items-center">
-              {Array(5).fill(0).map((_, i) => (
-                <StarIcon 
-                  key={i} 
-                  className={`w-5 h-5 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
-                />
-              ))}
-              <span className="ml-1 text-gray-600">{rating}/5</span>
-              {restaurant.reviewCount && restaurant.reviewCount > 0 && (
-                <span className="ml-1 text-gray-500">({restaurant.reviewCount} reviews)</span>
-              )}
-            </div>
-          </div>
-          
-          <p className="text-lg text-gray-700 mb-8">{description}</p>
-          
-          {/* Additional Photos */}
-          {additionalPhotos.length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold mb-4">Photos</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {additionalPhotos.map((photoUrl: string, index: number) => (
-                  <img 
-                    key={index}
-                    src={photoUrl}
-                    alt={`${name} photo ${index + 1}`}
-                    className="w-full h-40 object-cover rounded-lg shadow-md"
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Reviews Section */}
-          {reviews.length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold mb-4">Customer Reviews</h2>
-              <div className="space-y-6">
-                {reviews.map((review: { author: string; rating: number; text: string; time: string }, index: number) => (
-                  <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-bold">{review.author}</div>
-                      <div className="flex items-center">
-                        {Array(5).fill(0).map((_, i) => (
-                          <StarIcon 
-                            key={i} 
-                            className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-gray-600 text-sm mb-1">{review.text}</p>
-                    <p className="text-gray-500 text-xs">{review.time}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-4 flex items-center">
-              <MapIcon className="w-6 h-6 mr-2 text-orange-500" /> Location
-            </h2>
-            <div className="h-80 rounded-lg overflow-hidden shadow-lg mb-4">
-              <GoogleMapComponent 
-                restaurants={[restaurant]} 
-                center={coordinates}
-                zoom={15}
-              />
-            </div>
-            <p className="text-gray-600">{address}</p>
-          </div>
+    <div className="bg-gray-900 min-h-screen">
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <Link href="/" className="text-orange-500 hover:text-orange-600 flex items-center gap-2">
+            <span>←</span> Back to Home
+          </Link>
         </div>
         
-        {/* Sidebar */}
-        <div className="lg:col-span-1">
-          <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
-            <h2 className="text-xl font-bold mb-4">Restaurant Information</h2>
-            
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <MapPinIcon className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="font-bold text-gray-700">Address</h3>
-                  <p className="text-gray-600">{address}</p>
-                </div>
-              </div>
-              
-              {phone && (
-                <div className="flex items-start gap-3">
-                  <PhoneIcon className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="font-bold text-gray-700">Phone</h3>
-                    <p className="text-gray-600">{phone}</p>
-                  </div>
-                </div>
-              )}
-              
-              {website && (
-                <div className="flex items-start gap-3">
-                  <GlobeAltIcon className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="font-bold text-gray-700">Website</h3>
-                    <a 
-                      href={website} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-blue-600 hover:underline truncate block"
-                    >
-                      {website.replace(/^https?:\/\//, '')}
-                    </a>
-                  </div>
-                </div>
-              )}
-              
-              {hours.length > 0 && (
-                <div className="flex items-start gap-3">
-                  <ClockIcon className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="font-bold text-gray-700">Opening Hours</h3>
-                    {hours.map((item, index) => (
-                      <div key={index} className="text-gray-600 text-sm mt-1">
-                        <span className="font-medium">{item.day}:</span> {item.hours}
-                      </div>
-                    ))}
-                  </div>
+        {fromCache && (
+          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-3 flex justify-between items-center">
+            <div className="flex items-center">
+              <Database className="h-5 w-5 text-amber-500 mr-2" />
+              <p className="text-amber-700 text-sm">Details loaded from cache</p>
+            </div>
+            <button 
+              onClick={handleRefresh}
+              className="flex items-center text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-1 rounded"
+            >
+              <RefreshCw className="h-3 w-3 mr-1" />
+              Refresh
+            </button>
+          </div>
+        )}
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            <div className="mb-8">
+              {image ? (
+                <img 
+                  src={image} 
+                  alt={name} 
+                  className="w-full h-80 object-cover rounded-lg shadow-lg" 
+                />
+              ) : (
+                <div className="w-full h-80">
+                  <PlaceholderImage name={name} className="w-full h-full rounded-lg shadow-lg" />
                 </div>
               )}
             </div>
+            
+            <h1 className="text-4xl font-bold mb-2">{name}</h1>
+            
+            <div className="flex items-center gap-4 mb-4">
+              <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
+                {cuisineType.charAt(0).toUpperCase() + cuisineType.slice(1)}
+              </span>
+              <span className="text-gray-600">{priceRange}</span>
+              <div className="flex items-center">
+                {Array(5).fill(0).map((_, i) => (
+                  <StarIcon 
+                    key={i} 
+                    className={`w-5 h-5 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+                  />
+                ))}
+                <span className="ml-1 text-gray-600">{rating}/5</span>
+                {restaurant.reviewCount && restaurant.reviewCount > 0 && (
+                  <span className="ml-1 text-gray-500">({restaurant.reviewCount} reviews)</span>
+                )}
+              </div>
+            </div>
+            
+            <p className="text-lg text-gray-700 mb-8">{description}</p>
+            
+            {/* Additional Photos */}
+            {additionalPhotos.length > 0 && (
+              <div className="mb-12">
+                <h2 className="text-2xl font-bold mb-4">Photos</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {additionalPhotos.map((photoUrl: string, index: number) => (
+                    <img 
+                      key={index}
+                      src={photoUrl}
+                      alt={`${name} photo ${index + 1}`}
+                      className="w-full h-40 object-cover rounded-lg shadow-md"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Reviews Section */}
+            {reviews.length > 0 && (
+              <div className="mb-12">
+                <h2 className="text-2xl font-bold mb-4">Customer Reviews</h2>
+                <div className="space-y-6">
+                  {reviews.map((review: { author: string; rating: number; text: string; time: string }, index: number) => (
+                    <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-bold">{review.author}</div>
+                        <div className="flex items-center">
+                          {Array(5).fill(0).map((_, i) => (
+                            <StarIcon 
+                              key={i} 
+                              className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-gray-600 text-sm mb-1">{review.text}</p>
+                      <p className="text-gray-500 text-xs">{review.time}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold mb-4 flex items-center">
+                <MapIcon className="w-6 h-6 mr-2 text-orange-500" /> Location
+              </h2>
+              <div className="h-80 rounded-lg overflow-hidden shadow-lg mb-4">
+                <GoogleMapComponent 
+                  restaurants={[restaurant]} 
+                  center={coordinates}
+                  zoom={15}
+                />
+              </div>
+              <p className="text-gray-600">{address}</p>
+            </div>
           </div>
           
-          <HalalStatusInfo 
-            status={restaurant.halalStatus}
-            confidence={restaurant.halalConfidence}
-          />
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
+              <h2 className="text-xl font-bold mb-4">Restaurant Information</h2>
+              
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <MapPinIcon className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="font-bold text-gray-700">Address</h3>
+                    <p className="text-gray-600">{address}</p>
+                  </div>
+                </div>
+                
+                {phone && (
+                  <div className="flex items-start gap-3">
+                    <PhoneIcon className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-bold text-gray-700">Phone</h3>
+                      <p className="text-gray-600">{phone}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {website && (
+                  <div className="flex items-start gap-3">
+                    <GlobeAltIcon className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-bold text-gray-700">Website</h3>
+                      <a 
+                        href={website} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-blue-600 hover:underline truncate block"
+                      >
+                        {website.replace(/^https?:\/\//, '')}
+                      </a>
+                    </div>
+                  </div>
+                )}
+                
+                {hours.length > 0 && (
+                  <div className="flex items-start gap-3">
+                    <ClockIcon className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-bold text-gray-700">Opening Hours</h3>
+                      {hours.map((item, index) => (
+                        <div key={index} className="text-gray-600 text-sm mt-1">
+                          <span className="font-medium">{item.day}:</span> {item.hours}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <HalalStatusInfo 
+              status={restaurant.halalStatus}
+              confidence={restaurant.halalConfidence}
+            />
+          </div>
         </div>
       </div>
     </div>
