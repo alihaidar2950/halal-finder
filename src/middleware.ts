@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // List of paths that don't require authentication
-const publicPaths = ['/signin', '/signup', '/about', '/'];
+const publicPaths = ['/signin', '/signup', '/about', '/', '/auth'];
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();

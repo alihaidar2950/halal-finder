@@ -79,7 +79,7 @@ export default function SignInForm({ redirectTo = '/' }: SignInFormProps) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-orange-500 focus:border-orange-500"
             placeholder="your@email.com"
           />
         </div>
@@ -94,7 +94,7 @@ export default function SignInForm({ redirectTo = '/' }: SignInFormProps) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-orange-500 focus:border-orange-500"
             placeholder="••••••••"
           />
         </div>
@@ -103,7 +103,7 @@ export default function SignInForm({ redirectTo = '/' }: SignInFormProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 disabled:opacity-50"
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-4 rounded-lg transition duration-200 disabled:opacity-50"
           >
             {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
@@ -125,32 +125,35 @@ export default function SignInForm({ redirectTo = '/' }: SignInFormProps) {
             onClick={() => handleSocialLogin('google')}
             disabled={isLoading}
             className="w-full flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+            aria-label="Sign in with Google"
           >
-            <FaGoogle className="text-red-600" />
+            <FaGoogle className="text-red-600 text-xl" />
           </button>
           
           <button
             onClick={() => handleSocialLogin('facebook')}
             disabled={isLoading}
             className="w-full flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+            aria-label="Sign in with Facebook"
           >
-            <FaFacebook className="text-blue-600" />
+            <FaFacebook className="text-blue-600 text-xl" />
           </button>
           
           <button
             onClick={() => handleSocialLogin('github')}
             disabled={isLoading}
             className="w-full flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+            aria-label="Sign in with GitHub"
           >
-            <FaGithub className="text-gray-800" />
+            <FaGithub className="text-gray-800 text-xl" />
           </button>
         </div>
       </div>
       
-      <div className="text-center mt-4">
+      <div className="text-center mt-6">
         <p className="text-gray-600">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-orange-500 hover:text-orange-600">
+          <Link href="/signup" className="text-orange-500 hover:text-orange-600 font-medium">
             Sign up
           </Link>
         </p>

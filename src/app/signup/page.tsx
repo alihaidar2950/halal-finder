@@ -35,7 +35,7 @@ export default function SignUpPage() {
     return (
       <MainLayout>
         <div className="min-h-[70vh] flex justify-center items-center p-4">
-          <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
+          <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-8">
             <SignUpForm redirectTo={redirectTo} />
           </div>
         </div>
