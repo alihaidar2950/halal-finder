@@ -5,7 +5,7 @@ import { Restaurant } from '@/data/menuData';
 import PlaceholderImage from './PlaceholderImage';
 import Link from 'next/link';
 import HalalStatusBadge from './halal/HalalStatusBadge';
-import { AlertTriangleIcon } from 'lucide-react';
+import { AlertTriangleIcon, Navigation } from 'lucide-react';
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
@@ -31,6 +31,7 @@ export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
   return (
     <Link href={`/restaurants/${id}`} className="group">
       <div className="bg-white rounded-lg shadow-md overflow-hidden transform transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+        {/* Image and Restaurant Name Overlay */}
         <div className="h-48 relative">
           {image ? (
             <img 
@@ -41,9 +42,32 @@ export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
           ) : (
             <PlaceholderImage name={name} className="w-full h-full" />
           )}
+          
+          {/* Restaurant Name Overlay - Always Visible */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent">
+            <div className="absolute bottom-0 left-0 right-0 p-3">
+              <h3 className="text-white text-lg font-bold truncate">{name}</h3>
+              
+              {/* Distance and Price */}
+              <div className="flex justify-between items-center mt-1">
+                <div className="flex items-center">
+                  {formattedDistance && (
+                    <span className="text-white/90 text-xs flex items-center">
+                      <Navigation className="w-3 h-3 mr-1" />
+                      {formattedDistance}
+                    </span>
+                  )}
+                </div>
+                <span className="text-white/90 text-sm font-medium">{priceRange}</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Rating and Halal Status */}
           <div className="absolute top-3 right-3 bg-orange-500 text-white font-bold py-1 px-3 rounded-full text-sm shadow-md">
             {rating} ★
           </div>
+          
           {halalStatus && (
             <div className="absolute top-3 left-3 shadow-md">
               <HalalStatusBadge 
@@ -58,34 +82,25 @@ export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
           
           {/* Chain restaurant warning indicator */}
           {isChainRestaurant && halalStatus === 'fully_halal' && !isHalalVerified && (
-            <div className="absolute bottom-3 left-3 bg-amber-100 border border-amber-300 rounded-full p-1 shadow-md">
+            <div className="absolute bottom-3 right-3 bg-amber-100 border border-amber-300 rounded-full p-1 shadow-md">
               <AlertTriangleIcon className="h-4 w-4 text-amber-700" />
             </div>
           )}
         </div>
         
-        <div className="p-5">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-bold group-hover:text-orange-500 transition-colors">{name}</h3>
-            <span className="text-gray-600">{priceRange}</span>
-          </div>
-          
-          <div className="mb-4">
+        {/* Restaurant Details */}
+        <div className="p-4">
+          <div className="mb-3">
             <span className="inline-block bg-orange-100 text-orange-700 rounded-full px-3 py-1 text-xs font-medium">
               {cuisineType.charAt(0).toUpperCase() + cuisineType.slice(1)}
             </span>
-            {formattedDistance && (
-              <span className="ml-2 text-xs text-gray-500">
-                {formattedDistance}
-              </span>
-            )}
           </div>
           
-          <div className="text-gray-500 text-sm mb-2 truncate">
+          <div className="text-gray-600 text-sm mb-1 truncate">
             {address}
           </div>
           
-          <div className="text-gray-500 text-sm">
+          <div className="text-gray-600 text-sm">
             {phone}
           </div>
         </div>

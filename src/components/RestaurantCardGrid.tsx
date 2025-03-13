@@ -3,9 +3,8 @@
 import React from 'react';
 import { RestaurantWithDistance } from '@/utils/locationUtils';
 import RestaurantCard from './RestaurantCard';
-import { Database, RefreshCw, Navigation } from 'lucide-react';
+import { Database, RefreshCw } from 'lucide-react';
 import { clearCache } from '@/utils/cacheUtils';
-import { formatDistance } from '@/utils/locationUtils';
 
 interface RestaurantCardGridProps {
   restaurants: RestaurantWithDistance[];
@@ -55,12 +54,6 @@ export default function RestaurantCardGrid({
         {restaurants.map(restaurant => (
           <div key={restaurant.id} className="relative">
             <RestaurantCard restaurant={restaurant} />
-            {restaurant.distance !== undefined && (
-              <div className="absolute top-3 left-3 bg-black bg-opacity-70 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center">
-                <Navigation className="w-3 h-3 mr-1" />
-                {formatDistance(restaurant.distance)}
-              </div>
-            )}
           </div>
         ))}
       </div>
