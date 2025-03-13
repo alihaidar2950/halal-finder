@@ -8,7 +8,7 @@ import PlaceholderImage from '@/components/PlaceholderImage';
 import { fetchRestaurantDetails } from '@/services/restaurantService';
 import { Restaurant } from '@/data/menuData';
 import dynamic from 'next/dynamic';
-import HalalStatusInfo from '@/components/halal/HalalStatusInfo';
+import { HalalStatusInfo } from '@/components/halal/HalalStatusInfo';
 import { Database, RefreshCw } from 'lucide-react';
 import { clearCache } from '@/utils/cacheUtils';
 
@@ -250,25 +250,35 @@ export default function RestaurantDetailPage() {
                 )}
                 
                 {hours.length > 0 && (
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-3 mt-4">
                     <ClockIcon className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
                     <div>
-                      <h3 className="font-bold text-gray-700">Opening Hours</h3>
-                      {hours.map((item, index) => (
-                        <div key={index} className="text-gray-600 text-sm mt-1">
-                          <span className="font-medium">{item.day}:</span> {item.hours}
-                        </div>
-                      ))}
+                      <h3 className="font-bold text-gray-700">Hours</h3>
+                      <ul className="text-gray-600 space-y-1">
+                        {hours.map((day, index) => (
+                          <li key={index} className="flex justify-between">
+                            <span className="font-medium w-36">{day.day}</span>
+                            <span>{day.hours}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
                 )}
               </div>
             </div>
             
-            <HalalStatusInfo 
-              status={restaurant.halalStatus}
-              confidence={restaurant.halalConfidence}
-            />
+            {/* Halal Status Card */}
+            {restaurant.halalStatus && (
+              <div className="bg-white p-6 rounded-lg shadow-lg mt-8">
+                <HalalStatusInfo 
+                  status={restaurant.halalStatus} 
+                  confidence={restaurant.halalConfidence || 0} 
+                  isChain={restaurant.isChainRestaurant || false}
+                  verified={restaurant.isHalalVerified || false}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

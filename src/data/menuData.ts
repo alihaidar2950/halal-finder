@@ -30,6 +30,8 @@ export interface Restaurant {
   // Halal classification
   halalStatus?: HalalStatus;
   halalConfidence?: number; // 0-1 confidence score
+  isHalalVerified?: boolean; // Whether halal status has been verified
+  isChainRestaurant?: boolean; // Whether this is a chain restaurant
   distance?: number; // Distance in meters
   // Cache status
   fromCache?: boolean;

@@ -103,10 +103,16 @@ export function generateSearchCacheKey(query: string, lat: number, lng: number, 
 }
 
 // Generate a cache key for nearby restaurants
-export function generateNearbyRestaurantsCacheKey(lat: number, lng: number, radius: number): string {
+export function generateNearbyRestaurantsCacheKey(
+  lat: number, 
+  lng: number, 
+  radius: number,
+  cuisineType?: string
+): string {
   const roundedLat = Math.round(lat * 1000) / 1000;
   const roundedLng = Math.round(lng * 1000) / 1000;
-  return `halal_finder_nearby_${roundedLat}_${roundedLng}_${radius}`;
+  const cuisineString = cuisineType ? `_${cuisineType}` : '';
+  return `halal_finder_nearby_${roundedLat}_${roundedLng}_${radius}${cuisineString}`;
 }
 
 // Generate a cache key for restaurant details

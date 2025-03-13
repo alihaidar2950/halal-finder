@@ -5,13 +5,28 @@ import { Restaurant } from '@/data/menuData';
 import PlaceholderImage from './PlaceholderImage';
 import Link from 'next/link';
 import HalalStatusBadge from './halal/HalalStatusBadge';
+import { AlertTriangleIcon } from 'lucide-react';
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
 }
 
 export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
-  const { id, name, cuisineType, priceRange, rating, address, phone, image, halalStatus } = restaurant;
+  const { 
+    id, 
+    name, 
+    cuisineType, 
+    priceRange, 
+    rating, 
+    address, 
+    phone, 
+    image, 
+    halalStatus, 
+    halalConfidence,
+    isHalalVerified,
+    isChainRestaurant,
+    formattedDistance
+  } = restaurant;
   
   return (
     <Link href={`/restaurants/${id}`} className="group">
@@ -31,7 +46,20 @@ export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
           </div>
           {halalStatus && (
             <div className="absolute top-3 left-3 shadow-md">
-              <HalalStatusBadge status={halalStatus} size="sm" />
+              <HalalStatusBadge 
+                status={halalStatus} 
+                confidence={halalConfidence}
+                isChain={isChainRestaurant}
+                verified={isHalalVerified}
+                size="sm" 
+              />
+            </div>
+          )}
+          
+          {/* Chain restaurant warning indicator */}
+          {isChainRestaurant && halalStatus === 'fully_halal' && !isHalalVerified && (
+            <div className="absolute bottom-3 left-3 bg-amber-100 border border-amber-300 rounded-full p-1 shadow-md">
+              <AlertTriangleIcon className="h-4 w-4 text-amber-700" />
             </div>
           )}
         </div>
@@ -46,6 +74,11 @@ export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
             <span className="inline-block bg-orange-100 text-orange-700 rounded-full px-3 py-1 text-xs font-medium">
               {cuisineType.charAt(0).toUpperCase() + cuisineType.slice(1)}
             </span>
+            {formattedDistance && (
+              <span className="ml-2 text-xs text-gray-500">
+                {formattedDistance}
+              </span>
+            )}
           </div>
           
           <div className="text-gray-500 text-sm mb-2 truncate">

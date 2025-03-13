@@ -19,11 +19,12 @@ export async function fetchNearbyRestaurants(
   latitude: number,
   longitude: number,
   radius: number = 5000,
-  forceRefresh: boolean = false
+  forceRefresh: boolean = false,
+  cuisineType?: string
 ): Promise<RestaurantWithDistance[]> {
   try {
     // Check if we have cached results for this location and radius
-    const cacheKey = generateNearbyRestaurantsCacheKey(latitude, longitude, radius);
+    const cacheKey = generateNearbyRestaurantsCacheKey(latitude, longitude, radius, cuisineType);
     
     // Only check cache if not forcing a refresh
     if (!forceRefresh) {
@@ -41,10 +42,14 @@ export async function fetchNearbyRestaurants(
     
     // No cached results or forcing refresh, fetch from API
     // Make API request to our internal endpoint that uses Google Places API
-    const response = await fetch(
-      `/api/restaurants?lat=${latitude}&lng=${longitude}&radius=${radius}`,
-      { method: "GET" }
-    );
+    let apiUrl = `/api/restaurants?lat=${latitude}&lng=${longitude}&radius=${radius}`;
+    
+    // Add cuisine type if provided
+    if (cuisineType && cuisineType !== 'all') {
+      apiUrl += `&cuisine=${encodeURIComponent(cuisineType)}`;
+    }
+    
+    const response = await fetch(apiUrl, { method: "GET" });
 
     if (!response.ok) {
       throw new Error(`API request failed with status: ${response.status}`);
@@ -82,6 +87,20 @@ export async function fetchNearbyRestaurants(
     console.error("Error fetching nearby restaurants:", error);
     return [];
   }
+}
+
+/**
+ * Fetch restaurants by cuisine type
+ */
+export async function fetchRestaurantsByCuisine(
+  latitude: number,
+  longitude: number,
+  cuisineType: string,
+  radius: number = 10000,
+  forceRefresh: boolean = false
+): Promise<RestaurantWithDistance[]> {
+  // Reuse the same fetch method but add the cuisine type
+  return fetchNearbyRestaurants(latitude, longitude, radius, forceRefresh, cuisineType);
 }
 
 /**
