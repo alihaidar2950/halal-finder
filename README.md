@@ -2,7 +2,9 @@
 
 A modern web application built with Next.js that helps users discover and explore halal restaurants in their area.
 
-![Halal Finder Application](https://placehold.co/600x400?text=Halal+Finder+App&font=montserrat)
+![image](https://github.com/user-attachments/assets/d007ab2c-fcef-4ad7-a97a-1b38fa6af069)
+
+
 
 ## ✨ Features
 
