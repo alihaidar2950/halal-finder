@@ -6,7 +6,7 @@ import { cuisineTypes } from '@/data/menuData';
 import Link from 'next/link';
 import { MapPin, Search, RefreshCw } from 'lucide-react';
 import { fetchRestaurantsByCuisine } from '@/services/restaurantService';
-import { getCurrentLocation } from '@/utils/locationUtils';
+import { getCurrentLocation, RestaurantWithDistance } from '@/utils/locationUtils';
 import RestaurantCardGrid from '@/components/RestaurantCardGrid';
 
 export default function CuisinePage() {
@@ -17,7 +17,7 @@ export default function CuisinePage() {
   const cuisine = cuisineTypes.find(c => c.id === cuisineType);
   
   const [loading, setLoading] = useState(true);
-  const [restaurants, setRestaurants] = useState([]);
+  const [restaurants, setRestaurants] = useState<RestaurantWithDistance[]>([]);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [fromCache, setFromCache] = useState(false);
@@ -134,17 +134,26 @@ export default function CuisinePage() {
             <Search className="w-16 h-16 text-orange-500 mx-auto mb-4" />
             <h2 className="text-2xl font-semibold mb-2">No {cuisine.name} Restaurants Found</h2>
             <p className="text-gray-400 mb-6 max-w-md mx-auto">
-              We couldn't find any {cuisine.name.toLowerCase()} halal restaurants near your location.
+              We couldn&apos;t find any {cuisine.name.toLowerCase()} halal restaurants near your location. 
+              This might be because:
             </p>
+            <ul className="text-gray-400 mb-6 max-w-md mx-auto text-left list-disc pl-10">
+              <li className="mb-2">There are no results within the search radius</li> 
+              <li className="mb-2">The restaurants near you aren&apos;t specifically labeled as {cuisine.name.toLowerCase()}</li>
+              <li className="mb-2">Your location services may need to be refreshed</li>
+            </ul>
             <div className="flex flex-wrap gap-4 justify-center">
               <Link href="/" className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center">
                 <MapPin className="mr-2 h-5 w-5" />
                 Explore All Restaurants
               </Link>
-              <Link href="/search" className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg flex items-center">
-                <Search className="mr-2 h-5 w-5" />
-                Search By Address
-              </Link>
+              <button 
+                onClick={handleRefresh}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg flex items-center"
+              >
+                <RefreshCw className="mr-2 h-5 w-5" />
+                Try Again
+              </button>
             </div>
           </div>
         )}
