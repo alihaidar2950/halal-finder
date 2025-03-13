@@ -2,38 +2,92 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { restaurants, Restaurant } from "@/data/menuData";
+import { Restaurant } from "@/data/menuData";
 import RestaurantCard from "@/components/RestaurantCard";
 import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
+import { getCurrentLocation } from "@/utils/locationUtils";
+import { 
+  getFromCache, 
+  saveToCache, 
+  generateSearchCacheKey, 
+  CACHE_EXPIRY 
+} from "@/utils/cacheUtils";
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
   const [results, setResults] = useState<Restaurant[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fromCache, setFromCache] = useState(false);
 
   useEffect(() => {
-    if (query) {
-      const searchTerms = query.toLowerCase().split(" ");
-      const filteredResults = restaurants.filter((restaurant) => {
-        const nameMatch = restaurant.name.toLowerCase().includes(query.toLowerCase());
-        const descriptionMatch = restaurant.description.toLowerCase().includes(query.toLowerCase());
-        const cuisineMatch = restaurant.cuisineType.toLowerCase().includes(query.toLowerCase());
+    const fetchSearchResults = async () => {
+      if (!query) {
+        setResults([]);
+        setFromCache(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        // Get user's location
+        let location;
+        try {
+          location = await getCurrentLocation();
+        } catch {
+          // Fallback to a default location if geolocation fails
+          location = { lat: 45.4215, lng: -75.6972 }; // Ottawa center
+        }
+
+        // Generate a cache key for this specific search
+        const radius = 20000; // 20km radius
+        const cacheKey = generateSearchCacheKey(query, location.lat, location.lng, radius);
         
-        // Check if any of the search terms match
-        const termMatch = searchTerms.some(term => 
-          restaurant.name.toLowerCase().includes(term) || 
-          restaurant.description.toLowerCase().includes(term) ||
-          restaurant.cuisineType.toLowerCase().includes(term)
+        // Try to get cached results first
+        const cachedResults = getFromCache<Restaurant[]>(cacheKey);
+        
+        if (cachedResults) {
+          // We have cached results, use them
+          setResults(cachedResults);
+          setLoading(false);
+          setFromCache(true);
+          return;
+        }
+        
+        // No cached results, fetch from API
+        setFromCache(false);
+        
+        // Fetch results from the API with the search query as the keyword
+        const response = await fetch(
+          `/api/restaurants?lat=${location.lat}&lng=${location.lng}&radius=${radius}&keyword=${encodeURIComponent(query)}`,
+          { method: "GET" }
         );
+
+        if (!response.ok) {
+          throw new Error(`API request failed with status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const apiResults = data.restaurants || [];
         
-        return nameMatch || descriptionMatch || cuisineMatch || termMatch;
-      });
-      
-      setResults(filteredResults);
-    } else {
-      setResults([]);
-    }
+        // Save results to cache for future use
+        if (apiResults.length > 0) {
+          saveToCache(cacheKey, apiResults, CACHE_EXPIRY.SEARCH_RESULTS);
+        }
+        
+        setResults(apiResults);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching search results:", error);
+        setError("Failed to fetch search results. Please try again.");
+        setLoading(false);
+        setFromCache(false);
+      }
+    };
+
+    fetchSearchResults();
   }, [query]);
 
   return (
@@ -53,13 +107,24 @@ export default function SearchPage() {
         {query ? (
           <p className="text-gray-600">
             {results.length} results found for &quot;{query}&quot;
+            {fromCache && <span className="ml-2 text-sm text-orange-500">(from cache)</span>}
           </p>
         ) : (
           <p className="text-gray-600">Enter a search term to find restaurants</p>
         )}
       </div>
       
-      {results.length > 0 ? (
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-500 border-r-transparent"></div>
+          <p className="mt-4 text-gray-600">Searching for restaurants...</p>
+        </div>
+      ) : error ? (
+        <div className="text-center py-12 bg-red-50 rounded-lg">
+          <h3 className="text-xl mb-2 text-red-600">Error</h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+        </div>
+      ) : results.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {results.map(restaurant => (
             <RestaurantCard key={restaurant.id} restaurant={restaurant} />
@@ -69,7 +134,7 @@ export default function SearchPage() {
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <h3 className="text-xl mb-2">No restaurants found</h3>
           <p className="text-gray-600 mb-4">
-            We couldn&apos;t find any restaurants matching your search.
+            We couldn&apos;t find any halal restaurants matching &quot;{query}&quot;.
           </p>
           <Link 
             href="/"

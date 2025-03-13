@@ -5,14 +5,13 @@ import Link from "next/link";
 import { cuisineTypes } from "@/data/menuData";
 import SearchBar from "@/components/SearchBar";
 import GoogleMapComponent from "@/components/maps/GoogleMapComponent";
-import RestaurantCard from "@/components/RestaurantCard";
 import { 
   getCurrentLocation, 
-  formatDistance,
   RestaurantWithDistance
 } from "@/utils/locationUtils";
 import { fetchNearbyRestaurants } from "@/services/restaurantService";
-import { MapPin, Navigation } from "lucide-react";
+import { MapPin } from "lucide-react";
+import RestaurantCardGrid from "@/components/RestaurantCardGrid";
 
 export default function Home() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -21,6 +20,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [maxDistance, setMaxDistance] = useState(5); // Default 5km radius
   const [locationPermissionRequested, setLocationPermissionRequested] = useState(false);
+  const [fromCache, setFromCache] = useState(false);
 
   useEffect(() => {
     // Function to get user location and fetch nearby restaurants
@@ -31,13 +31,15 @@ export default function Home() {
         setUserLocation(location);
         
         // Fetch restaurants from Google Places API
-        const restaurants = await fetchNearbyRestaurants(
+        const results = await fetchNearbyRestaurants(
           location.lat,
           location.lng,
           maxDistance * 1000 // Convert km to meters
         );
         
-        setNearbyRestaurants(restaurants);
+        // Check if results are from cache
+        setFromCache(results.length > 0 && results[0].fromCache === true);
+        setNearbyRestaurants(results);
         setLoading(false);
       } catch {
         setError("Unable to access your location. Please enable location services.");
@@ -86,8 +88,27 @@ export default function Home() {
   };
 
   const filteredRestaurants = nearbyRestaurants.filter(
-    restaurant => restaurant.distance <= maxDistance
+    restaurant => restaurant.distance <= maxDistance * 1000
   );
+
+  // Add a new function to refresh data by clearing cache and re-fetching
+  const refreshData = async () => {
+    if (userLocation) {
+      setLoading(true);
+      setFromCache(false);
+      
+      // Re-fetch restaurants data
+      const restaurants = await fetchNearbyRestaurants(
+        userLocation.lat,
+        userLocation.lng,
+        maxDistance * 1000, // Convert km to meters
+        true // Force refresh (skip cache)
+      );
+      
+      setNearbyRestaurants(restaurants);
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
@@ -226,17 +247,12 @@ export default function Home() {
                   </div>
                   
                   {filteredRestaurants.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredRestaurants.map(restaurant => (
-                        <div key={restaurant.id} className="relative">
-                          <RestaurantCard restaurant={restaurant} />
-                          <div className="absolute top-3 left-3 bg-black bg-opacity-70 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center">
-                            <Navigation className="w-3 h-3 mr-1" />
-                            {formatDistance(restaurant.distance)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <RestaurantCardGrid 
+                      restaurants={filteredRestaurants}
+                      fromCache={fromCache}
+                      onRefresh={refreshData}
+                      maxDistance={maxDistance}
+                    />
                   ) : (
                     <div className="text-center py-12 bg-gray-700 rounded-lg">
                       <h3 className="text-xl mb-2">No halal restaurants found nearby</h3>

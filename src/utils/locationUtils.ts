@@ -58,6 +58,8 @@ export function getCurrentLocation(): Promise<{ lat: number; lng: number }> {
 // Type for restaurant with distance property
 export interface RestaurantWithDistance extends Restaurant {
   distance: number;
+  formattedDistance?: string;
+  fromCache?: boolean;
 }
 
 // Filter restaurants by distance from a point

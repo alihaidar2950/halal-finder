@@ -4,6 +4,12 @@ import {
   formatDistance, 
   RestaurantWithDistance 
 } from "@/utils/locationUtils";
+import {
+  getFromCache,
+  saveToCache,
+  generateNearbyRestaurantsCacheKey,
+  CACHE_EXPIRY
+} from "@/utils/cacheUtils";
 
 /**
  * Fetch nearby halal restaurants from Google Places API
@@ -11,9 +17,28 @@ import {
 export async function fetchNearbyRestaurants(
   latitude: number,
   longitude: number,
-  radius: number = 5000
+  radius: number = 5000,
+  forceRefresh: boolean = false
 ): Promise<RestaurantWithDistance[]> {
   try {
+    // Check if we have cached results for this location and radius
+    const cacheKey = generateNearbyRestaurantsCacheKey(latitude, longitude, radius);
+    
+    // Only check cache if not forcing a refresh
+    if (!forceRefresh) {
+      const cachedResults = getFromCache<RestaurantWithDistance[]>(cacheKey);
+      if (cachedResults) {
+        console.log("Using cached nearby restaurants data");
+        // Add a fromCache property to each result
+        const resultsWithCacheFlag = cachedResults.map(restaurant => ({
+          ...restaurant,
+          fromCache: true
+        }));
+        return resultsWithCacheFlag;
+      }
+    }
+    
+    // No cached results or forcing refresh, fetch from API
     // Make API request to our internal endpoint that uses Google Places API
     const response = await fetch(
       `/api/restaurants?lat=${latitude}&lng=${longitude}&radius=${radius}`,
@@ -42,7 +67,16 @@ export async function fetchNearbyRestaurants(
     });
 
     // Sort by distance
-    return restaurantsWithDistance.sort((a: RestaurantWithDistance, b: RestaurantWithDistance) => a.distance - b.distance);
+    const sortedResults = restaurantsWithDistance.sort(
+      (a: RestaurantWithDistance, b: RestaurantWithDistance) => a.distance - b.distance
+    );
+    
+    // Cache the results
+    if (sortedResults.length > 0) {
+      saveToCache(cacheKey, sortedResults, CACHE_EXPIRY.NEARBY_RESTAURANTS);
+    }
+    
+    return sortedResults;
   } catch (error) {
     console.error("Error fetching nearby restaurants:", error);
     return [];
@@ -54,9 +88,18 @@ export async function fetchNearbyRestaurants(
  */
 export async function fetchRestaurantDetails(placeId: string): Promise<Restaurant | null> {
   try {
+    // Check if we have cached details for this restaurant
+    const cacheKey = `halal_finder_restaurant_${placeId}`;
+    const cachedDetails = getFromCache<Restaurant>(cacheKey);
+    
+    if (cachedDetails) {
+      console.log("Using cached restaurant details");
+      return cachedDetails;
+    }
+    
+    // No cached details, fetch from API
     // This would typically call our backend API which would then call Google Places API
     // to get detailed information about a specific place
-    // For now, we'll keep this as a placeholder
     const response = await fetch(`/api/restaurants/${placeId}`);
     
     if (!response.ok) {
@@ -64,7 +107,14 @@ export async function fetchRestaurantDetails(placeId: string): Promise<Restauran
     }
     
     const data = await response.json();
-    return data.restaurant;
+    const restaurantDetails = data.restaurant;
+    
+    // Cache the restaurant details
+    if (restaurantDetails) {
+      saveToCache(cacheKey, restaurantDetails, CACHE_EXPIRY.RESTAURANT_DETAILS);
+    }
+    
+    return restaurantDetails;
   } catch (error) {
     console.error("Error fetching restaurant details:", error);
     return null;

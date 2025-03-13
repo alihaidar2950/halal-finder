@@ -1,18 +1,41 @@
 "use client";
 
-import React, { useState } from 'react';
-import { restaurants } from '../data/menuData';
+import React, { useState, useEffect } from 'react';
+import { Restaurant } from '../data/menuData';
 import RestaurantCard from './RestaurantCard';
 import CuisineFilter from './CuisineFilter';
 import Link from 'next/link';
-import { MapPin, Search } from 'lucide-react';
+import { MapPin, Search, Database, RefreshCw } from 'lucide-react';
+import { clearCache } from '@/utils/cacheUtils';
 
-const RestaurantList: React.FC = () => {
+interface RestaurantListProps {
+  restaurants: Restaurant[];
+  fromCache?: boolean;
+  onRefresh?: () => void;
+}
+
+const RestaurantList: React.FC<RestaurantListProps> = ({ 
+  restaurants: propRestaurants = [], 
+  fromCache = false,
+  onRefresh 
+}) => {
   const [activeCuisine, setActiveCuisine] = useState('all');
+  const [showCacheIndicator, setShowCacheIndicator] = useState(fromCache);
+
+  useEffect(() => {
+    setShowCacheIndicator(fromCache);
+  }, [fromCache]);
+
+  const handleClearCache = () => {
+    clearCache();
+    if (onRefresh) {
+      onRefresh();
+    }
+  };
 
   const filteredRestaurants = activeCuisine === 'all' 
-    ? restaurants 
-    : restaurants.filter(restaurant => restaurant.cuisineType === activeCuisine);
+    ? propRestaurants 
+    : propRestaurants.filter(restaurant => restaurant.cuisineType.toLowerCase() === activeCuisine.toLowerCase());
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -24,6 +47,22 @@ const RestaurantList: React.FC = () => {
           <span>Restaurants</span>
         </div>
       </div>
+
+      {showCacheIndicator && (
+        <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3 flex justify-between items-center">
+          <div className="flex items-center">
+            <Database className="h-5 w-5 text-amber-500 mr-2" />
+            <p className="text-amber-700 text-sm">Results loaded from cache</p>
+          </div>
+          <button 
+            onClick={handleClearCache}
+            className="flex items-center text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-1 rounded"
+          >
+            <RefreshCw className="h-3 w-3 mr-1" />
+            Refresh
+          </button>
+        </div>
+      )}
 
       <CuisineFilter 
         activeCuisine={activeCuisine} 
@@ -37,10 +76,10 @@ const RestaurantList: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 bg-gray-800 rounded-lg">
+        <div className="text-center py-16 bg-gray-50 rounded-lg">
           <Search className="w-16 h-16 text-orange-500 mx-auto mb-4" />
           <h2 className="text-2xl font-semibold mb-2">No Restaurants Found</h2>
-          <p className="text-gray-400 mb-6 max-w-md mx-auto">
+          <p className="text-gray-600 mb-6 max-w-md mx-auto">
             Try using the location search on the home page or search for specific cuisines to find halal restaurants near you.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
