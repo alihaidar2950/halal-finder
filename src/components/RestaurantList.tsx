@@ -5,6 +5,7 @@ import { restaurants } from '../data/menuData';
 import RestaurantCard from './RestaurantCard';
 import CuisineFilter from './CuisineFilter';
 import Link from 'next/link';
+import { MapPin, Search } from 'lucide-react';
 
 const RestaurantList: React.FC = () => {
   const [activeCuisine, setActiveCuisine] = useState('all');
@@ -29,11 +30,31 @@ const RestaurantList: React.FC = () => {
         onCuisineChange={setActiveCuisine} 
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredRestaurants.map(restaurant => (
-          <RestaurantCard key={restaurant.id} restaurant={restaurant} />
-        ))}
-      </div>
+      {filteredRestaurants.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredRestaurants.map(restaurant => (
+            <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-16 bg-gray-800 rounded-lg">
+          <Search className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-semibold mb-2">No Restaurants Found</h2>
+          <p className="text-gray-400 mb-6 max-w-md mx-auto">
+            Try using the location search on the home page or search for specific cuisines to find halal restaurants near you.
+          </p>
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Link href="/" className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center">
+              <MapPin className="mr-2 h-5 w-5" />
+              Find Nearby Restaurants
+            </Link>
+            <Link href="/search" className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg flex items-center">
+              <Search className="mr-2 h-5 w-5" />
+              Search All Restaurants
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,9 +1,94 @@
-import RestaurantList from "../components/RestaurantList";
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import SearchBar from "@/components/SearchBar";
 import { cuisineTypes } from "@/data/menuData";
+import SearchBar from "@/components/SearchBar";
+import GoogleMapComponent from "@/components/maps/GoogleMapComponent";
+import RestaurantCard from "@/components/RestaurantCard";
+import { 
+  getCurrentLocation, 
+  formatDistance,
+  RestaurantWithDistance
+} from "@/utils/locationUtils";
+import { fetchNearbyRestaurants } from "@/services/restaurantService";
+import { MapPin, Navigation } from "lucide-react";
 
 export default function Home() {
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [nearbyRestaurants, setNearbyRestaurants] = useState<RestaurantWithDistance[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [maxDistance, setMaxDistance] = useState(5); // Default 5km radius
+  const [locationPermissionRequested, setLocationPermissionRequested] = useState(false);
+
+  useEffect(() => {
+    // Function to get user location and fetch nearby restaurants
+    const fetchLocationAndRestaurants = async () => {
+      try {
+        setLoading(true);
+        const location = await getCurrentLocation();
+        setUserLocation(location);
+        
+        // Fetch restaurants from Google Places API
+        const restaurants = await fetchNearbyRestaurants(
+          location.lat,
+          location.lng,
+          maxDistance * 1000 // Convert km to meters
+        );
+        
+        setNearbyRestaurants(restaurants);
+        setLoading(false);
+      } catch {
+        setError("Unable to access your location. Please enable location services.");
+        setLoading(false);
+        
+        // Fallback to a default location (Ottawa center)
+        const defaultLocation = { lat: 45.4215, lng: -75.6972 };
+        setUserLocation(defaultLocation);
+        
+        // Fetch restaurants from Google Places API with default location
+        const restaurants = await fetchNearbyRestaurants(
+          defaultLocation.lat,
+          defaultLocation.lng,
+          maxDistance * 1000
+        );
+        
+        setNearbyRestaurants(restaurants);
+      }
+    };
+
+    // Only fetch location if user has requested it
+    if (locationPermissionRequested) {
+      fetchLocationAndRestaurants();
+    } else {
+      setLoading(false);
+    }
+  }, [locationPermissionRequested, maxDistance]);
+
+  const handleLocationRequest = () => {
+    setLocationPermissionRequested(true);
+  };
+
+  const filterByMaxDistance = async (maxDist: number) => {
+    setMaxDistance(maxDist);
+    
+    if (userLocation) {
+      setLoading(true);
+      const restaurants = await fetchNearbyRestaurants(
+        userLocation.lat,
+        userLocation.lng,
+        maxDist * 1000 // Convert km to meters
+      );
+      setNearbyRestaurants(restaurants);
+      setLoading(false);
+    }
+  };
+
+  const filteredRestaurants = nearbyRestaurants.filter(
+    restaurant => restaurant.distance <= maxDistance
+  );
+
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
       <header className="bg-black text-white p-4 border-b border-gray-800">
@@ -13,8 +98,7 @@ export default function Home() {
           </div>
           <nav className="hidden md:flex space-x-6">
             <Link href="/" className="hover:text-orange-400">Home</Link>
-            <Link href="/nearby" className="hover:text-orange-400">Near Me</Link>
-            <Link href="/search" className="hover:text-orange-400">Restaurants</Link>
+            <Link href="/search" className="hover:text-orange-400">Search</Link>
             <Link href="#cuisines" className="hover:text-orange-400">Cuisines</Link>
             <Link href="#" className="hover:text-orange-400">About</Link>
             <Link href="#" className="hover:text-orange-400">Contact</Link>
@@ -25,37 +109,156 @@ export default function Home() {
                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
               </svg>
             </button>
-            <button className="p-2 rounded-full bg-gray-800 hover:bg-gray-700">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
-              </svg>
-            </button>
           </div>
         </div>
       </header>
 
       <main>
-        {/* Hero Section with Search */}
+        {/* Hero Section with Search and Location Request */}
         <section className="relative bg-gray-900 py-24 mb-8">
           <div className="absolute inset-0 bg-black opacity-50"></div>
           
           <div className="container mx-auto px-4 z-10 relative">
             <div className="text-center mb-12">
               <h1 className="text-5xl font-bold mb-4 text-white">Find <span className="text-orange-500">Halal</span> Restaurants Near You</h1>
-              <p className="text-xl text-gray-300 mb-12">Discover the best halal restaurants for any cuisine, taste, and occasion</p>
+              <p className="text-xl text-gray-300 mb-8">Discover the best halal restaurants for any cuisine, taste, and occasion</p>
               
-              <SearchBar />
+              {!locationPermissionRequested ? (
+                <div className="flex flex-col items-center">
+                  <SearchBar />
+                  <div className="mt-8 text-center">
+                    <p className="text-lg text-gray-300 mb-4">Or find halal restaurants near your current location</p>
+                    <button 
+                      onClick={handleLocationRequest}
+                      className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center justify-center mx-auto"
+                    >
+                      <MapPin className="mr-2 h-5 w-5" />
+                      Use My Location
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <SearchBar />
+                </div>
+              )}
             </div>
           </div>
         </section>
         
-        {/* Restaurant List */}
-        <section id="restaurants">
-          <RestaurantList />
-        </section>
+        {/* Nearby Restaurants Section (conditionally rendered) */}
+        {locationPermissionRequested && (
+          <section id="nearby-restaurants" className="py-12 bg-gray-800">
+            <div className="container mx-auto px-4">
+              <h2 className="text-3xl font-bold mb-8 flex items-center">
+                <MapPin className="mr-3 h-8 w-8 text-orange-500" />
+                Halal Restaurants Near You
+              </h2>
+              
+              {loading ? (
+                <div className="py-8 text-center">
+                  <div className="animate-spin h-12 w-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p>{userLocation ? "Searching for restaurants..." : "Detecting your location..."}</p>
+                </div>
+              ) : error ? (
+                <div className="bg-red-900 border border-red-800 text-white px-4 py-3 rounded mb-6">
+                  {error}
+                </div>
+              ) : (
+                <>
+                  <div className="mb-8">
+                    <div className="flex flex-wrap gap-3 mb-4">
+                      <button
+                        onClick={() => filterByMaxDistance(1)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium ${
+                          maxDistance === 1 
+                            ? "bg-orange-500 text-white" 
+                            : "bg-gray-700 text-gray-200 hover:bg-gray-600"
+                        }`}
+                      >
+                        Within 1km
+                      </button>
+                      <button
+                        onClick={() => filterByMaxDistance(3)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium ${
+                          maxDistance === 3 
+                            ? "bg-orange-500 text-white" 
+                            : "bg-gray-700 text-gray-200 hover:bg-gray-600"
+                        }`}
+                      >
+                        Within 3km
+                      </button>
+                      <button
+                        onClick={() => filterByMaxDistance(5)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium ${
+                          maxDistance === 5 
+                            ? "bg-orange-500 text-white" 
+                            : "bg-gray-700 text-gray-200 hover:bg-gray-600"
+                        }`}
+                      >
+                        Within 5km
+                      </button>
+                      <button
+                        onClick={() => filterByMaxDistance(10)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium ${
+                          maxDistance === 10 
+                            ? "bg-orange-500 text-white" 
+                            : "bg-gray-700 text-gray-200 hover:bg-gray-600"
+                        }`}
+                      >
+                        Within 10km
+                      </button>
+                    </div>
+                    
+                    <p className="text-gray-400 mb-6">
+                      Showing {filteredRestaurants.length} restaurants within {maxDistance}km
+                    </p>
+                  </div>
+                  
+                  <div className="mb-12 rounded-lg overflow-hidden">
+                    {userLocation && (
+                      <GoogleMapComponent 
+                        restaurants={filteredRestaurants} 
+                        center={userLocation}
+                        zoom={12}
+                      />
+                    )}
+                  </div>
+                  
+                  {filteredRestaurants.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredRestaurants.map(restaurant => (
+                        <div key={restaurant.id} className="relative">
+                          <RestaurantCard restaurant={restaurant} />
+                          <div className="absolute top-3 left-3 bg-black bg-opacity-70 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                            <Navigation className="w-3 h-3 mr-1" />
+                            {formatDistance(restaurant.distance)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 bg-gray-700 rounded-lg">
+                      <h3 className="text-xl mb-2">No halal restaurants found nearby</h3>
+                      <p className="text-gray-300 mb-4">
+                        Try increasing your search radius or try a different location.
+                      </p>
+                      <button
+                        onClick={() => filterByMaxDistance(maxDistance + 5)}
+                        className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg"
+                      >
+                        Increase Search Radius (+5km)
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </section>
+        )}
         
         {/* Cuisines Section */}
-        <section id="cuisines" className="py-16 bg-gray-800">
+        <section id="cuisines" className="py-16 bg-gray-900">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold mb-4 text-orange-500">Explore Cuisines</h2>
