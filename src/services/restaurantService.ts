@@ -99,8 +99,20 @@ export async function fetchRestaurantsByCuisine(
   radius: number = 10000,
   forceRefresh: boolean = false
 ): Promise<RestaurantWithDistance[]> {
-  // Reuse the same fetch method but add the cuisine type
-  return fetchNearbyRestaurants(latitude, longitude, radius, forceRefresh, cuisineType);
+  // Always include 'halal' in the search to ensure we get halal restaurants
+  const searchResults = await fetchNearbyRestaurants(
+    latitude, 
+    longitude, 
+    radius, 
+    forceRefresh, 
+    cuisineType
+  );
+  
+  // Filter out restaurants with unknown halal status to ensure we only return
+  // restaurants that are confirmed to be fully halal or have halal options
+  return searchResults.filter(restaurant => 
+    restaurant.halalStatus !== 'unknown'
+  );
 }
 
 /**

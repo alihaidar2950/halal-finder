@@ -92,17 +92,17 @@ export default function CuisinePage() {
         
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-            {cuisine?.icon} {cuisine?.name} Restaurants
+            {cuisine?.icon} Halal {cuisine?.name} Restaurants
           </h1>
           <p className="text-gray-400">
-            Discover the best {cuisine?.name} halal restaurants near you
+            Discover the best halal {cuisine?.name.toLowerCase()} restaurants near you
           </p>
         </div>
         
         {loading ? (
           <div className="py-12 text-center">
             <div className="animate-spin h-12 w-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p>Searching for {cuisine.name} restaurants...</p>
+            <p>Searching for halal {cuisine.name.toLowerCase()} restaurants...</p>
           </div>
         ) : error ? (
           <div className="bg-red-900 border border-red-800 text-white px-4 py-3 rounded mb-6">
@@ -124,7 +124,9 @@ export default function CuisinePage() {
             )}
             
             <RestaurantCardGrid 
-              restaurants={restaurants}
+              restaurants={restaurants.filter(restaurant => 
+                restaurant.halalStatus !== 'unknown'
+              )}
               fromCache={fromCache}
               onRefresh={handleRefresh}
             />
