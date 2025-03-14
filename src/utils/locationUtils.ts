@@ -40,15 +40,28 @@ export function getCurrentLocation(): Promise<{ lat: number; lng: number }> {
     if (!navigator.geolocation) {
       reject(new Error("Geolocation is not supported by your browser"));
     } else {
+      // Add timeout to prevent long-hanging requests
+      const timeoutId = setTimeout(() => {
+        reject(new Error("Location request timed out. Please try again."));
+      }, 10000); // 10 second timeout
+      
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          clearTimeout(timeoutId);
           resolve({
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           });
         },
         (error) => {
+          clearTimeout(timeoutId);
+          console.error("Geolocation error:", error.code, error.message);
           reject(error);
+        },
+        {
+          enableHighAccuracy: false, // Set to false for faster response
+          timeout: 10000, // 10 seconds
+          maximumAge: 30 * 60 * 1000 // Cache location for 30 minutes
         }
       );
     }

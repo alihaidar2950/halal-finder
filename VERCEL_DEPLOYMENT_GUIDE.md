@@ -144,6 +144,15 @@ Vercel automatically sets up continuous deployment for your project:
 - Check that your Supabase redirect URLs are correctly set
 - Verify the `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` environment variables
 
+### Location Services Issues:
+- If users see "Location detection timed out" or "Using default location" messages, they may need to:
+  - Ensure location services are enabled in their browser
+  - Accept the location permission prompt
+  - Try a different browser if location services are blocked
+- Note that the application uses Ottawa, Canada as a default location when geolocation fails
+- Some countries have stricter geolocation permissions that may cause timeouts
+- Consider adding regional defaults for different parts of the world if this is a common issue
+
 ### API Errors:
 - Check your Google Maps API key restrictions
 - Verify that the `GOOGLE_MAPS_API_KEY` is set correctly in Vercel

@@ -41,8 +41,21 @@ export default function Home() {
         setFromCache(results.length > 0 && results[0].fromCache === true);
         setNearbyRestaurants(results);
         setLoading(false);
-      } catch {
-        setError("Unable to access your location. Please enable location services.");
+      } catch (error) {
+        // Create a more informative error message
+        let errorMessage = "Unable to access your location.";
+        
+        if (error instanceof Error) {
+          if (error.message.includes("timed out")) {
+            errorMessage = "Location detection timed out. Using default location (Ottawa, Canada).";
+          } else if (error.message.includes("denied")) {
+            errorMessage = "Location access was denied. Please enable location services to see nearby restaurants.";
+          } else {
+            errorMessage = `Location error: Using default location (Ottawa, Canada). ${error.message}`;
+          }
+        }
+        
+        setError(errorMessage);
         setLoading(false);
         
         // Fallback to a default location (Ottawa center)
@@ -50,13 +63,17 @@ export default function Home() {
         setUserLocation(defaultLocation);
         
         // Fetch restaurants from Google Places API with default location
-        const restaurants = await fetchNearbyRestaurants(
-          defaultLocation.lat,
-          defaultLocation.lng,
-          maxDistance * 1000
-        );
-        
-        setNearbyRestaurants(restaurants);
+        try {
+          const restaurants = await fetchNearbyRestaurants(
+            defaultLocation.lat,
+            defaultLocation.lng,
+            maxDistance * 1000
+          );
+          
+          setNearbyRestaurants(restaurants);
+        } catch (fetchError) {
+          setError("Unable to fetch restaurants with default location. Please try again later.");
+        }
       }
     };
 

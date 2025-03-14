@@ -34,11 +34,15 @@ function SearchContent() {
         setLoading(true);
         // Get user's location
         let location;
+        let usingDefaultLocation = false;
+        
         try {
           location = await getCurrentLocation();
-        } catch {
+        } catch (error) {
           // Fallback to a default location if geolocation fails
           location = { lat: 45.4215, lng: -75.6972 }; // Ottawa center
+          usingDefaultLocation = true;
+          console.warn("Using default location for search:", error);
         }
 
         // Generate a cache key for this specific search
@@ -77,7 +81,16 @@ function SearchContent() {
           saveToCache(cacheKey, apiResults, CACHE_EXPIRY.SEARCH_RESULTS);
         }
         
+        // Set results with appropriate message
         setResults(apiResults);
+        
+        // If we're using default location, let the user know
+        if (usingDefaultLocation) {
+          setError("Using default location (Ottawa, Canada) for search results. Enable location services for more relevant results.");
+        } else {
+          setError(null);
+        }
+        
         setLoading(false);
       } catch (error) {
         console.error("Error fetching search results:", error);
