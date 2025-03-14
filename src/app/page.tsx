@@ -10,7 +10,7 @@ import {
   RestaurantWithDistance
 } from "@/utils/locationUtils";
 import { fetchNearbyRestaurants } from "@/services/restaurantService";
-import { MapPin } from "lucide-react";
+import { MapPin, Utensils, Award } from "lucide-react";
 import RestaurantCardGrid from "@/components/RestaurantCardGrid";
 
 export default function Home() {
@@ -71,7 +71,8 @@ export default function Home() {
           );
           
           setNearbyRestaurants(restaurants);
-        } catch (fetchError) {
+        } catch {
+          // Catch any errors that occur during fetch
           setError("Unable to fetch restaurants with default location. Please try again later.");
         }
       }
@@ -128,192 +129,250 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
-      <header className="bg-black text-white p-4 border-b border-gray-800">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center">
-            <span className="text-2xl font-bold text-orange-500">Halal Finder</span>
-          </div>
-          <nav className="hidden md:flex space-x-6">
-            <Link href="/" className="hover:text-orange-400">Home</Link>
-            <Link href="/search" className="hover:text-orange-400">Search</Link>
-            <Link href="#cuisines" className="hover:text-orange-400">Cuisines</Link>
-            <Link href="#" className="hover:text-orange-400">About</Link>
-            <Link href="#" className="hover:text-orange-400">Contact</Link>
-          </nav>
-          <div className="flex space-x-4">
-            <button className="p-2 rounded-full bg-gray-800 hover:bg-gray-700">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-white text-gray-900">
+      {/* Hero Section */}
+      <section 
+        className="relative h-screen flex items-center justify-center text-white"
+        style={{
+          backgroundImage: 'url("https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2938&q=80")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
+      >
+        <div className="absolute inset-0 bg-black opacity-60"></div>
 
-      <main>
-        {/* Hero Section with Search and Location Request */}
-        <section className="relative bg-gray-900 py-24 mb-8">
-          <div className="absolute inset-0 bg-black opacity-50"></div>
+        <div className="text-center relative z-10 max-w-5xl px-6">
+          <h2 className="font-serif italic text-7xl mb-4">Halal Finder</h2>
+          <div className="uppercase text-sm tracking-widest mb-10">Premium Halal Restaurants</div>
           
-          <div className="container mx-auto px-4 z-10 relative">
-            <div className="text-center mb-12">
-              <h1 className="text-5xl font-bold mb-4 text-white">Find <span className="text-orange-500">Halal</span> Restaurants Near You</h1>
-              <p className="text-xl text-gray-300 mb-8">Discover the best halal restaurants for any cuisine, taste, and occasion</p>
-              
-              {!locationPermissionRequested ? (
-                <div className="flex flex-col items-center">
-                  <SearchBar />
-                  <div className="mt-8 text-center">
-                    <p className="text-lg text-gray-300 mb-4">Or find halal restaurants near your current location</p>
-                    <button 
-                      onClick={handleLocationRequest}
-                      className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center justify-center mx-auto"
-                    >
-                      <MapPin className="mr-2 h-5 w-5" />
-                      Use My Location
-                    </button>
-                  </div>
+          {!locationPermissionRequested ? (
+            <button 
+              onClick={handleLocationRequest}
+              className="uppercase tracking-wider border-2 border-white hover:bg-white hover:text-black transition-all duration-300 px-10 py-3 mt-8"
+            >
+              Find Restaurants
+            </button>
+          ) : (
+            <div className="w-full max-w-xl mx-auto">
+              <SearchBar />
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div className="text-center">
+              <div className="flex justify-center mb-6">
+                <div className="inline-block p-2">
+                  <Utensils className="h-8 w-8 text-amber-600" />
                 </div>
-              ) : (
-                <div className="flex flex-col items-center">
-                  <SearchBar />
+              </div>
+              <h3 className="uppercase text-sm tracking-widest mb-4">Fresh Halal Food</h3>
+              <p className="text-gray-600 text-sm">
+                Every restaurant we feature is carefully vetted to ensure they serve fresh, authentic halal cuisine.
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="flex justify-center mb-6">
+                <div className="inline-block p-2">
+                  <MapPin className="h-8 w-8 text-amber-600" />
                 </div>
-              )}
+              </div>
+              <h3 className="uppercase text-sm tracking-widest mb-4">Special Cuisine</h3>
+              <p className="text-gray-600 text-sm">
+                Discover a diverse range of halal cuisines from around the world, from traditional to modern fusion.
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="flex justify-center mb-6">
+                <div className="inline-block p-2">
+                  <Award className="h-8 w-8 text-amber-600" />
+                </div>
+              </div>
+              <h3 className="uppercase text-sm tracking-widest mb-4">Best Service</h3>
+              <p className="text-gray-600 text-sm">
+                We highlight restaurants known for their exceptional service and dining experiences.
+              </p>
             </div>
           </div>
-        </section>
-        
-        {/* Nearby Restaurants Section (conditionally rendered) */}
-        {locationPermissionRequested && (
-          <section id="nearby-restaurants" className="py-12 bg-gray-800">
-            <div className="container mx-auto px-4">
-              <h2 className="text-3xl font-bold mb-8 flex items-center">
-                <MapPin className="mr-3 h-8 w-8 text-orange-500" />
-                Halal Restaurants Near You
-              </h2>
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section className="py-20 bg-gray-50 overflow-hidden">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center">
+            <div className="md:w-1/2 mb-12 md:mb-0 md:pr-12">
+              <h2 className="font-serif italic text-5xl mb-6">About</h2>
+              <h3 className="uppercase text-xl font-bold mb-8">OUR MISSION</h3>
               
-              {loading ? (
-                <div className="py-8 text-center">
-                  <div className="animate-spin h-12 w-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-                  <p>{userLocation ? "Searching for restaurants..." : "Detecting your location..."}</p>
-                </div>
-              ) : error ? (
-                <div className="bg-red-900 border border-red-800 text-white px-4 py-3 rounded mb-6">
-                  {error}
-                </div>
-              ) : (
-                <>
-                  <div className="mb-8">
-                    <div className="flex flex-wrap gap-3 mb-4">
-                      <button
-                        onClick={() => filterByMaxDistance(5)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium ${
-                          maxDistance === 5 
-                            ? "bg-orange-500 text-white" 
-                            : "bg-gray-700 text-gray-200 hover:bg-gray-600"
-                        }`}
-                      >
-                        Within 5km
-                      </button>
-                      <button
-                        onClick={() => filterByMaxDistance(10)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium ${
-                          maxDistance === 10 
-                            ? "bg-orange-500 text-white" 
-                            : "bg-gray-700 text-gray-200 hover:bg-gray-600"
-                        }`}
-                      >
-                        Within 10km
-                      </button>
-                      <button
-                        onClick={() => filterByMaxDistance(20)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium ${
-                          maxDistance === 20 
-                            ? "bg-orange-500 text-white" 
-                            : "bg-gray-700 text-gray-200 hover:bg-gray-600"
-                        }`}
-                      >
-                        Within 20km
-                      </button>
-                      <button
-                        onClick={() => filterByMaxDistance(40)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium ${
-                          maxDistance === 40 
-                            ? "bg-orange-500 text-white" 
-                            : "bg-gray-700 text-gray-200 hover:bg-gray-600"
-                        }`}
-                      >
-                        Within 40km
-                      </button>
-                    </div>
-                    
-                    <p className="text-gray-400 mb-6">
-                      Showing {filteredRestaurants.length} restaurants within {maxDistance}km
-                    </p>
+              <p className="text-gray-600 mb-6">
+                Halal Finder connects you with the finest halal dining establishments in your area. 
+                Our mission is to make it effortless for Muslims to discover authentic halal 
+                cuisine while promoting establishments that respect halal dietary requirements.
+              </p>
+              
+              <p className="text-gray-600 mb-8">
+                We verify and classify restaurants based on their halal status, 
+                giving you peace of mind when choosing where to dine.
+              </p>
+              
+              <Link href="/about" className="uppercase tracking-wider border-2 border-black hover:bg-black hover:text-white transition-all duration-300 px-8 py-3 inline-block">
+                Read More
+              </Link>
+            </div>
+            
+            <div className="md:w-1/2">
+              <div className="relative">
+                <img 
+                  src="https://images.unsplash.com/photo-1582234372722-50d7ccc30ebd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80" 
+                  alt="Halal cuisine" 
+                  className="rounded-lg shadow-xl"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Nearby Restaurants Section (conditionally rendered) */}
+      {locationPermissionRequested && (
+        <section id="nearby-restaurants" className="py-20 bg-gray-100">
+          <div className="container mx-auto px-6">
+            <h2 className="font-serif italic text-4xl mb-3 text-center">Near You</h2>
+            <div className="text-center mb-12">
+              <div className="uppercase text-sm tracking-widest mb-10">Halal Restaurants</div>
+            </div>
+            
+            {loading ? (
+              <div className="py-16 text-center">
+                <div className="animate-spin h-12 w-12 border-4 border-amber-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-gray-600">{userLocation ? "Searching for restaurants..." : "Detecting your location..."}</p>
+              </div>
+            ) : error ? (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+                {error}
+              </div>
+            ) : (
+              <>
+                <div className="mb-12">
+                  <div className="flex flex-wrap justify-center gap-4 mb-8">
+                    <button
+                      onClick={() => filterByMaxDistance(5)}
+                      className={`px-6 py-2 border ${
+                        maxDistance === 5 
+                          ? "bg-amber-600 text-white border-amber-600" 
+                          : "bg-white text-gray-800 border-gray-300 hover:border-amber-600"
+                      } transition-colors`}
+                    >
+                      Within 5km
+                    </button>
+                    <button
+                      onClick={() => filterByMaxDistance(10)}
+                      className={`px-6 py-2 border ${
+                        maxDistance === 10 
+                          ? "bg-amber-600 text-white border-amber-600" 
+                          : "bg-white text-gray-800 border-gray-300 hover:border-amber-600"
+                      } transition-colors`}
+                    >
+                      Within 10km
+                    </button>
+                    <button
+                      onClick={() => filterByMaxDistance(20)}
+                      className={`px-6 py-2 border ${
+                        maxDistance === 20 
+                          ? "bg-amber-600 text-white border-amber-600" 
+                          : "bg-white text-gray-800 border-gray-300 hover:border-amber-600"
+                      } transition-colors`}
+                    >
+                      Within 20km
+                    </button>
+                    <button
+                      onClick={() => filterByMaxDistance(40)}
+                      className={`px-6 py-2 border ${
+                        maxDistance === 40 
+                          ? "bg-amber-600 text-white border-amber-600" 
+                          : "bg-white text-gray-800 border-gray-300 hover:border-amber-600"
+                      } transition-colors`}
+                    >
+                      Within 40km
+                    </button>
                   </div>
                   
-                  <div className="mb-12 rounded-lg overflow-hidden">
-                    {userLocation && (
-                      <GoogleMapComponent 
-                        restaurants={filteredRestaurants} 
-                        center={userLocation}
-                        zoom={12}
-                      />
-                    )}
-                  </div>
-                  
-                  {filteredRestaurants.length > 0 ? (
+                  <p className="text-center text-gray-600 mb-10">
+                    Showing {filteredRestaurants.length} restaurants within {maxDistance}km
+                  </p>
+                </div>
+                
+                <div className="mb-16 rounded-lg overflow-hidden shadow-lg">
+                  {userLocation && (
+                    <GoogleMapComponent 
+                      restaurants={filteredRestaurants} 
+                      center={userLocation}
+                      zoom={12}
+                    />
+                  )}
+                </div>
+                
+                {filteredRestaurants.length > 0 ? (
+                  <div className="pb-12">
                     <RestaurantCardGrid 
                       restaurants={filteredRestaurants}
                       fromCache={fromCache}
                       onRefresh={refreshData}
                       maxDistance={maxDistance}
                     />
-                  ) : (
-                    <div className="text-center py-12 bg-gray-700 rounded-lg">
-                      <h3 className="text-xl mb-2">No halal restaurants found nearby</h3>
-                      <p className="text-gray-300 mb-4">
-                        Try increasing your search radius or try a different location.
-                      </p>
-                      <button
-                        onClick={() => filterByMaxDistance(maxDistance + 10)}
-                        className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg"
-                      >
-                        Increase Search Radius (+10km)
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </section>
-        )}
-        
-        {/* Cuisines Section */}
-        <section id="cuisines" className="py-16 bg-gray-900">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4 text-orange-500">Explore Cuisines</h2>
-              <p className="text-gray-300">Discover restaurants by your favorite cuisine</p>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-              {/* Skip the 'all' option which is at index 0 */}
-              {cuisineTypes.slice(1).map(cuisine => (
-                <Link 
-                  key={cuisine.id} 
-                  href={`/cuisines/${encodeURIComponent(cuisine.id)}`}
-                  className="bg-gray-700 hover:bg-gray-600 rounded-lg p-6 text-center transition-all"
-                >
-                  <div className="text-4xl mb-3">{cuisine.icon}</div>
-                  <h3 className="font-bold">{cuisine.name}</h3>
-                </Link>
-              ))}
-            </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-16 bg-white rounded-lg shadow-md">
+                    <h3 className="text-xl font-serif mb-4">No halal restaurants found nearby</h3>
+                    <p className="text-gray-600 mb-8 max-w-xl mx-auto">
+                      Try increasing your search radius or try a different location.
+                    </p>
+                    <button
+                      onClick={() => filterByMaxDistance(maxDistance + 10)}
+                      className="border-2 border-black hover:bg-black hover:text-white px-8 py-3 uppercase tracking-wider transition-all duration-300"
+                    >
+                      Increase Search Radius (+10km)
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </section>
-      </main>
+      )}
+      
+      {/* Cuisines Section */}
+      <section id="cuisines" className="py-20 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="font-serif italic text-5xl mb-3">Explore Cuisines</h2>
+            <div className="uppercase text-sm tracking-widest">Discover restaurants by your favorite cuisine</div>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {/* Skip the 'all' option which is at index 0 */}
+            {cuisineTypes.slice(1).map(cuisine => (
+              <Link 
+                key={cuisine.id} 
+                href={`/cuisines/${encodeURIComponent(cuisine.id)}`}
+                className="group relative overflow-hidden"
+              >
+                <div className="aspect-square bg-gray-100 flex flex-col items-center justify-center p-6 transition-all group-hover:bg-gray-200">
+                  <div className="text-5xl mb-4">{cuisine.icon}</div>
+                  <h3 className="text-sm uppercase tracking-wider">{cuisine.name}</h3>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <footer className="bg-black text-gray-300 py-12">
         <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 px-4">

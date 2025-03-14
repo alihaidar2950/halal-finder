@@ -5,7 +5,7 @@ import { Restaurant } from '@/data/menuData';
 import PlaceholderImage from './PlaceholderImage';
 import Link from 'next/link';
 import HalalStatusBadge from './halal/HalalStatusBadge';
-import { AlertTriangleIcon, Navigation } from 'lucide-react';
+import { AlertTriangleIcon, Star } from 'lucide-react';
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
@@ -19,7 +19,6 @@ export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
     priceRange, 
     rating, 
     address, 
-    phone, 
     image, 
     halalStatus, 
     halalConfidence,
@@ -29,45 +28,28 @@ export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
   } = restaurant;
   
   return (
-    <Link href={`/restaurants/${id}`} className="group">
-      <div className="bg-white rounded-lg shadow-md overflow-hidden transform transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-        {/* Image and Restaurant Name Overlay */}
-        <div className="h-48 relative">
+    <Link href={`/restaurants/${id}`} className="group block">
+      <div className="bg-white overflow-hidden transition-all duration-300 hover:shadow-lg">
+        {/* Image */}
+        <div className="aspect-[4/3] relative overflow-hidden">
           {image ? (
             <img 
               src={image} 
               alt={name} 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
           ) : (
             <PlaceholderImage name={name} className="w-full h-full" />
           )}
           
-          {/* Restaurant Name Overlay - Always Visible */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent">
-            <div className="absolute bottom-0 left-0 right-0 p-3">
-              <h3 className="text-white text-lg font-bold truncate">{name}</h3>
-              
-              {/* Distance and Price */}
-              <div className="flex justify-between items-center mt-1">
-                <div className="flex items-center">
-                  {formattedDistance && (
-                    <span className="text-white/90 text-xs flex items-center">
-                      <Navigation className="w-3 h-3 mr-1" />
-                      {formattedDistance}
-                    </span>
-                  )}
-                </div>
-                <span className="text-white/90 text-sm font-medium">{priceRange}</span>
-              </div>
+          {/* Distance overlay */}
+          {formattedDistance && (
+            <div className="absolute bottom-3 right-3 bg-black/70 text-white text-xs px-3 py-1">
+              {formattedDistance}
             </div>
-          </div>
+          )}
           
-          {/* Rating and Halal Status */}
-          <div className="absolute top-3 right-3 bg-orange-500 text-white font-bold py-1 px-3 rounded-full text-sm shadow-md">
-            {rating} ★
-          </div>
-          
+          {/* Halal Status */}
           {halalStatus && (
             <div className="absolute top-3 left-3 shadow-md">
               <HalalStatusBadge 
@@ -82,26 +64,32 @@ export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
           
           {/* Chain restaurant warning indicator */}
           {isChainRestaurant && halalStatus === 'fully_halal' && !isHalalVerified && (
-            <div className="absolute bottom-3 right-3 bg-amber-100 border border-amber-300 rounded-full p-1 shadow-md">
+            <div className="absolute bottom-3 left-3 bg-amber-100 border border-amber-300 rounded-full p-1 shadow-md">
               <AlertTriangleIcon className="h-4 w-4 text-amber-700" />
             </div>
           )}
         </div>
         
         {/* Restaurant Details */}
-        <div className="p-4">
-          <div className="mb-3">
-            <span className="inline-block bg-orange-100 text-orange-700 rounded-full px-3 py-1 text-xs font-medium">
+        <div className="p-6">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="font-bold text-lg group-hover:text-amber-700 transition-colors">{name}</h3>
+            <div className="flex items-center">
+              <Star className="h-4 w-4 text-amber-500 mr-1 fill-amber-500" />
+              <span className="text-sm font-medium">{rating}</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2 mb-3">
+            <span className="text-sm text-gray-600">
               {cuisineType.charAt(0).toUpperCase() + cuisineType.slice(1)}
             </span>
+            <span className="text-gray-400">•</span>
+            <span className="text-sm text-gray-600">{priceRange}</span>
           </div>
           
           <div className="text-gray-600 text-sm mb-1 truncate">
             {address}
-          </div>
-          
-          <div className="text-gray-600 text-sm">
-            {phone}
           </div>
         </div>
       </div>
