@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
-import { FaGoogle, FaFacebook, FaGithub } from 'react-icons/fa';
+import { FaGoogle, FaFacebook, FaXTwitter } from 'react-icons/fa6';
 import { useRouter } from 'next/navigation';
 
 interface SignInFormProps {
@@ -38,7 +38,7 @@ export default function SignInForm({ redirectTo = '/' }: SignInFormProps) {
     }
   };
 
-  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'github') => {
+  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'twitter') => {
     try {
       setIsLoading(true);
       setError(null);
@@ -140,12 +140,12 @@ export default function SignInForm({ redirectTo = '/' }: SignInFormProps) {
           </button>
           
           <button
-            onClick={() => handleSocialLogin('github')}
+            onClick={() => handleSocialLogin('twitter')}
             disabled={isLoading}
             className="w-full flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-            aria-label="Sign in with GitHub"
+            aria-label="Sign in with X (Twitter)"
           >
-            <FaGithub className="text-gray-800 text-xl" />
+            <FaXTwitter className="text-black text-xl" />
           </button>
         </div>
       </div>
