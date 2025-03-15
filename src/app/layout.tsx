@@ -1,23 +1,26 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Roboto, Montserrat } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "700", "900"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const roboto = Roboto({
+  variable: "--font-roboto",
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "700", "900"],
 });
 
 export const metadata: Metadata = {
-  title: "Halal Finder",
-  description: "Find halal restaurants near you",
+  title: "Halal Finder | Premium Halal Restaurant Directory",
+  description: "Discover premium halal restaurants with confidence and elegance",
+  keywords: ["halal", "restaurant", "food", "dining", "cuisine", "muslim-friendly"],
 };
 
 export default function RootLayout({
@@ -28,12 +31,22 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${montserrat.variable} ${roboto.variable} antialiased bg-black text-white`}
       >
         <AuthProvider>
           {children}
           <Analytics />
-          <Toaster position="top-center" />
+          <Toaster 
+            position="top-center" 
+            theme="dark"
+            toastOptions={{
+              style: {
+                background: '#1c1c1c',
+                border: '1px solid #333',
+                color: '#fff',
+              },
+            }}
+          />
         </AuthProvider>
       </body>
     </html>

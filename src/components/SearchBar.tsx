@@ -23,11 +23,11 @@ export default function SearchBar() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search for halal restaurants, cuisines, or dishes..."
-          className="w-full py-4 pl-5 pr-14 rounded-lg text-gray-800 bg-white border-2 border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-lg"
+          className="w-full py-4 pl-5 pr-14 rounded-none text-white bg-[#121212] border border-gray-800 focus:border-[#ffc107] focus:ring-2 focus:ring-[#ffc107]/20 outline-none transition-all text-lg"
         />
         <button
           type="submit"
-          className="absolute right-2 top-1/2 -translate-y-1/2 bg-orange-500 hover:bg-orange-600 text-white p-2 rounded-lg transition-colors"
+          className="absolute right-0 top-0 bottom-0 bg-[#ffc107] hover:bg-[#e6b006] text-black px-4 transition-colors"
           aria-label="Search"
         >
           <Search className="h-6 w-6" />

@@ -40,23 +40,26 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="text-center mb-12">
-        <h1 className="text-5xl font-bold italic mb-6 text-orange-500">Halal Restaurants</h1>
-        <div className="inline-flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-full">
-          <Link href="/" className="hover:text-gray-200">Home</Link>
+        <h1 className="text-5xl font-bold mb-6 text-white">
+          <span className="text-[#ffc107]">HALAL</span> RESTAURANTS
+        </h1>
+        <div className="h-[1px] w-64 bg-gray-800 mx-auto mb-6"></div>
+        <div className="inline-flex items-center gap-2 text-gray-400">
+          <Link href="/" className="hover:text-[#ffc107]">HOME</Link>
           <span>/</span>
-          <span>Restaurants</span>
+          <span className="text-[#ffc107]">RESTAURANTS</span>
         </div>
       </div>
 
       {showCacheIndicator && (
-        <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3 flex justify-between items-center">
+        <div className="mb-4 bg-[#1c1c1c] border border-gray-800 rounded-lg p-3 flex justify-between items-center">
           <div className="flex items-center">
-            <Database className="h-5 w-5 text-amber-500 mr-2" />
-            <p className="text-amber-700 text-sm">Results loaded from cache</p>
+            <Database className="h-5 w-5 text-[#ffc107] mr-2" />
+            <p className="text-gray-300 text-sm">Results loaded from cache</p>
           </div>
           <button 
             onClick={handleClearCache}
-            className="flex items-center text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-1 rounded"
+            className="flex items-center text-xs bg-[#2c2c2c] hover:bg-[#3c3c3c] text-gray-200 px-2 py-1 rounded"
           >
             <RefreshCw className="h-3 w-3 mr-1" />
             Refresh
@@ -76,18 +79,18 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 bg-gray-50 rounded-lg">
-          <Search className="w-16 h-16 text-orange-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-semibold mb-2">No Restaurants Found</h2>
-          <p className="text-gray-600 mb-6 max-w-md mx-auto">
+        <div className="text-center py-16 bg-[#121212] border border-gray-800 rounded-lg">
+          <Search className="w-16 h-16 text-[#ffc107] mx-auto mb-4" />
+          <h2 className="text-2xl font-semibold mb-2 text-white">No Restaurants Found</h2>
+          <p className="text-gray-400 mb-6 max-w-md mx-auto">
             Try using the location search on the home page or search for specific cuisines to find halal restaurants near you.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
-            <Link href="/" className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center">
+            <Link href="/" className="bg-[#ffc107] hover:bg-[#e6b006] text-black px-6 py-3 rounded-none flex items-center">
               <MapPin className="mr-2 h-5 w-5" />
               Find Nearby Restaurants
             </Link>
-            <Link href="/search" className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg flex items-center">
+            <Link href="/search" className="bg-[#232323] hover:bg-[#343434] text-white border border-[#ffc107] px-6 py-3 rounded-none flex items-center">
               <Search className="mr-2 h-5 w-5" />
               Search All Restaurants
             </Link>

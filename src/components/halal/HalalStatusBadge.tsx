@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { HalalStatus } from '@/data/menuData';
-import { getHalalStatusLabel, getHalalStatusStyles } from '@/utils/halal/classifier';
+import { getHalalStatusLabel } from '@/utils/halal/classifier';
 import { CheckCircledIcon } from "@radix-ui/react-icons";
 import { UtensilsCrossed } from 'lucide-react';
 
@@ -28,7 +28,6 @@ export default function HalalStatusBadge({
   if (!status) return null;
   
   const label = getHalalStatusLabel(status, isChain, verified);
-  const styles = getHalalStatusStyles(status, isChain, verified);
   
   // Determine if this is likely a cultural/traditional halal restaurant
   const isTraditionalHalal = confidence && confidence > 0.7 && status === "fully_halal" && !isChain;
@@ -39,10 +38,31 @@ export default function HalalStatusBadge({
     lg: 'px-4 py-1.5 text-base'
   };
   
+  // Override styles to match our theme
+  let themeStyles = {
+    bg: 'bg-[#121212]',
+    text: 'text-white',
+    border: 'border border-[#ffc107]'
+  };
+  
+  if (status === 'fully_halal') {
+    themeStyles = {
+      bg: 'bg-[#ffc107]',
+      text: 'text-black',
+      border: ''
+    };
+  } else if (status === 'halal_options' || status === 'halal_ingredients') {
+    themeStyles = {
+      bg: 'bg-[#121212]',
+      text: 'text-[#ffc107]',
+      border: 'border border-[#ffc107]'
+    };
+  }
+  
   return (
     <div className={`flex items-center ${className}`}>
       <span 
-        className={`${styles.bg} ${styles.text} ${sizeStyles[size]} rounded-full font-medium ${styles.border || ""} flex items-center`}
+        className={`${themeStyles.bg} ${themeStyles.text} ${sizeStyles[size]} rounded-none font-medium ${themeStyles.border || ""} flex items-center`}
       >
         {isTraditionalHalal && size !== 'sm' && (
           <UtensilsCrossed className="inline-block mr-1 h-3 w-3" />
@@ -53,7 +73,7 @@ export default function HalalStatusBadge({
         )}
       </span>
       {showConfidence && confidence !== undefined && (
-        <span className="text-gray-500 text-xs ml-2">
+        <span className="text-[#ffc107] text-xs ml-2">
           {(confidence * 5).toFixed(1)}★
         </span>
       )}

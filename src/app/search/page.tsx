@@ -104,84 +104,101 @@ function SearchContent() {
   }, [query]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 min-h-screen bg-black text-white">
       <div className="mb-8">
-        <Link href="/" className="text-orange-500 hover:text-orange-600 flex items-center gap-2">
+        <Link href="/" className="text-[#ffc107] hover:text-[#e6b006] flex items-center gap-2">
           <span>←</span> Back to Home
         </Link>
       </div>
       
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-6">Search Results</h1>
+        <h1 className="text-3xl font-bold mb-6">
+          <span className="text-[#ffc107]">SEARCH</span> RESULTS
+        </h1>
+        <div className="h-[1px] w-16 bg-gray-800 mb-6"></div>
         <SearchBar />
       </div>
-      
-      <div className="mb-6">
-        {query ? (
-          <p className="text-gray-600">
-            {results.length} results found for &quot;{query}&quot;
-            {fromCache && <span className="ml-2 text-sm text-orange-500">(from cache)</span>}
-          </p>
-        ) : (
-          <p className="text-gray-600">Enter a search term to find restaurants</p>
-        )}
-      </div>
-      
-      {loading ? (
+
+      {!loading && !error && results.length > 0 && (
+        <div className="mb-4 text-gray-400">
+          Found <span className="text-[#ffc107]">{results.length}</span> result{results.length !== 1 ? 's' : ''} 
+          {fromCache && <span className="text-gray-500 text-sm italic ml-2">(from cache)</span>}
+        </div>
+      )}
+
+      {loading && (
         <div className="text-center py-12">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-500 border-r-transparent"></div>
-          <p className="mt-4 text-gray-600">Searching for restaurants...</p>
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#ffc107] border-r-transparent"></div>
+          <p className="mt-4 text-gray-400">Searching for halal restaurants...</p>
         </div>
-      ) : error ? (
-        <div className="text-center py-12 bg-red-50 rounded-lg">
-          <h3 className="text-xl mb-2 text-red-600">Error</h3>
-          <p className="text-gray-600 mb-4">{error}</p>
+      )}
+
+      {error && (
+        <div className="bg-[#1c1c1c] border border-red-800 text-red-400 p-4 rounded mb-8">
+          <p className="font-semibold mb-2">Error</p>
+          <p>{error}</p>
         </div>
-      ) : results.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {results.map(restaurant => (
+      )}
+
+      {!loading && !error && results.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {results.map((restaurant) => (
             <RestaurantCard key={restaurant.id} restaurant={restaurant} />
           ))}
         </div>
-      ) : query ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <h3 className="text-xl mb-2">No restaurants found</h3>
-          <p className="text-gray-600 mb-4">
-            We couldn&apos;t find any halal restaurants matching &quot;{query}&quot;.
+      )}
+
+      {!loading && !error && query && results.length === 0 && (
+        <div className="text-center py-12 bg-[#1c1c1c] border border-gray-800 rounded-lg p-8">
+          <div className="mb-4 text-4xl">🍔</div>
+          <h2 className="text-xl font-semibold mb-2 text-white">No results found</h2>
+          <p className="text-gray-400 mb-4">
+            No matching halal restaurants found for &quot;{query}&quot;.
           </p>
-          <Link 
-            href="/"
-            className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg"
-          >
-            View All Restaurants
-          </Link>
+          <p className="text-gray-500 text-sm">
+            Try searching for different keywords or browse restaurants by cuisine.
+          </p>
         </div>
-      ) : null}
+      )}
+
+      {!loading && !error && !query && (
+        <div className="text-center py-12 bg-[#1c1c1c] border border-gray-800 rounded-lg p-8">
+          <h2 className="text-xl font-semibold mb-2 text-white">Looking for something specific?</h2>
+          <p className="text-gray-400 mb-4">
+            Search for halal restaurants by name, cuisine type, or location.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <Link href="/" className="text-orange-500 hover:text-orange-600 flex items-center gap-2">
-            <span>←</span> Back to Home
-          </Link>
+    <Suspense
+      fallback={
+        <div className="container mx-auto px-4 py-8 min-h-screen bg-black text-white">
+          <div className="mb-8">
+            <Link href="/" className="text-[#ffc107] hover:text-[#e6b006] flex items-center gap-2">
+              <span>←</span> Back to Home
+            </Link>
+          </div>
+          
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-6">
+              <span className="text-[#ffc107]">SEARCH</span> RESULTS
+            </h1>
+            <div className="h-[1px] w-16 bg-gray-800 mb-6"></div>
+            <div className="h-12 bg-[#1c1c1c] border border-gray-800 rounded-none animate-pulse"></div>
+          </div>
+          
+          <div className="text-center py-12">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#ffc107] border-r-transparent"></div>
+            <p className="mt-4 text-gray-400">Loading search...</p>
+          </div>
         </div>
-        
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-6">Search Results</h1>
-          <div className="h-12 bg-gray-200 rounded-lg animate-pulse"></div>
-        </div>
-        
-        <div className="text-center py-12">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-500 border-r-transparent"></div>
-          <p className="mt-4 text-gray-600">Loading search...</p>
-        </div>
-      </div>
-    }>
+      }
+    >
       <SearchContent />
     </Suspense>
   );
