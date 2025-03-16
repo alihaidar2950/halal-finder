@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Restaurant } from "@/data/menuData";
 import RestaurantCard from "@/components/RestaurantCard";
 import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
+import CuisineFilter from "@/components/CuisineFilter";
 import { getCurrentLocation } from "@/utils/locationUtils";
 import { 
   getFromCache, 
@@ -16,15 +17,45 @@ import {
 
 function SearchContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const query = searchParams.get("q") || "";
+  const cuisineFilter = searchParams.get("cuisine") || "";
   const [results, setResults] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fromCache, setFromCache] = useState(false);
+  const [activeCuisine, setActiveCuisine] = useState(cuisineFilter || "all");
+
+  useEffect(() => {
+    // Update activeCuisine when the URL parameter changes
+    setActiveCuisine(cuisineFilter || "all");
+  }, [cuisineFilter]);
+
+  // Handle cuisine filter change
+  const handleCuisineChange = (cuisine: string) => {
+    setActiveCuisine(cuisine);
+    
+    // Update URL with new cuisine parameter
+    const params = new URLSearchParams(searchParams.toString());
+    
+    if (cuisine === "all") {
+      params.delete("cuisine");
+    } else {
+      params.set("cuisine", cuisine);
+    }
+    
+    // Keep the search query if it exists
+    if (!query) {
+      params.delete("q");
+    }
+    
+    router.push(`/search?${params.toString()}`);
+  };
 
   useEffect(() => {
     const fetchSearchResults = async () => {
-      if (!query) {
+      // If neither search query nor cuisine filter, show empty results
+      if (!query && !cuisineFilter) {
         setResults([]);
         setFromCache(false);
         return;
@@ -47,7 +78,8 @@ function SearchContent() {
 
         // Generate a cache key for this specific search
         const radius = 40000; // 40km radius to match our largest distance filter
-        const cacheKey = generateSearchCacheKey(query, location.lat, location.lng, radius);
+        const searchTerm = query || cuisineFilter || "";
+        const cacheKey = generateSearchCacheKey(searchTerm, location.lat, location.lng, radius);
         
         // Try to get cached results first
         const cachedResults = getFromCache<Restaurant[]>(cacheKey);
@@ -63,11 +95,19 @@ function SearchContent() {
         // No cached results, fetch from API
         setFromCache(false);
         
-        // Fetch results from the API with the search query as the keyword
-        const response = await fetch(
-          `/api/restaurants?lat=${location.lat}&lng=${location.lng}&radius=${radius}&keyword=${encodeURIComponent(query)}`,
-          { method: "GET" }
-        );
+        // Build the API URL - include cuisine parameter if it exists
+        let apiUrl = `/api/restaurants?lat=${location.lat}&lng=${location.lng}&radius=${radius}`;
+        
+        if (query) {
+          apiUrl += `&keyword=${encodeURIComponent(query)}`;
+        }
+        
+        if (cuisineFilter) {
+          apiUrl += `&cuisine=${encodeURIComponent(cuisineFilter)}`;
+        }
+        
+        // Fetch results from the API
+        const response = await fetch(apiUrl, { method: "GET" });
 
         if (!response.ok) {
           throw new Error(`API request failed with status: ${response.status}`);
@@ -101,7 +141,7 @@ function SearchContent() {
     };
 
     fetchSearchResults();
-  }, [query]);
+  }, [query, cuisineFilter]);
 
   return (
     <div className="container mx-auto px-4 py-8 min-h-screen bg-black text-white">
@@ -117,6 +157,15 @@ function SearchContent() {
         </h1>
         <div className="h-[1px] w-16 bg-gray-800 mb-6"></div>
         <SearchBar />
+      </div>
+
+      {/* Cuisine Filter */}
+      <div className="mb-8">
+        <h2 className="text-xl font-bold mb-4">Filter by Cuisine:</h2>
+        <CuisineFilter 
+          activeCuisine={activeCuisine} 
+          onCuisineChange={handleCuisineChange} 
+        />
       </div>
 
       {!loading && !error && results.length > 0 && (

@@ -93,8 +93,11 @@ export async function GET(request: NextRequest) {
     // Modify the keyword to include cuisine if provided
     let searchKeyword = keyword;
     if (cuisine && cuisine !== 'all') {
+      // Convert cuisine_name format to "cuisine name"
+      const formattedCuisine = cuisine.replace(/_/g, ' ');
+      
       // For specific cuisines, include the cuisine and always include halal in the search
-      searchKeyword = `halal ${cuisine} restaurant`;
+      searchKeyword = `halal ${formattedCuisine} restaurant`;
     }
     
     // Make request to Google Places API

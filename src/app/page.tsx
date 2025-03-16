@@ -512,15 +512,19 @@ export default function Home() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { name: "Turkish", image: "https://images.pexels.com/photos/2641886/pexels-photo-2641886.jpeg?auto=compress&cs=tinysrgb&w=1800", price: "$18", dish: "Authentic Kebabs" },
-              { name: "Indian", image: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1936&q=80", price: "$20", dish: "Biryani & Curry" },
-              { name: "Asian", image: "https://images.unsplash.com/photo-1562565652-a0d8f0c59eb4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1949&q=80", price: "$19", dish: "Stir-Fried Noodles" },
-              { name: "Mediterranean", image: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80", price: "$24", dish: "Wood-Fired Pizza" },
-              { name: "American", image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2099&q=80", price: "$16", dish: "Gourmet Burgers" },
-              { name: "Middle Eastern", image: "https://images.unsplash.com/photo-1530469912745-a215c6b256ea?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80", price: "$22", dish: "Mezze & Falafel" },
-              { name: "Persian", image: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1935&q=80", price: "$25", dish: "Chelow Kebab" },
+              { id: "turkish", name: "Turkish", image: "https://images.pexels.com/photos/2641886/pexels-photo-2641886.jpeg?auto=compress&cs=tinysrgb&w=1800", price: "$18", dish: "Authentic Kebabs" },
+              { id: "indian", name: "Indian", image: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1936&q=80", price: "$20", dish: "Biryani & Curry" },
+              { id: "asian", name: "Asian", image: "https://images.unsplash.com/photo-1562565652-a0d8f0c59eb4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1949&q=80", price: "$19", dish: "Stir-Fried Noodles" },
+              { id: "mediterranean", name: "Mediterranean", image: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80", price: "$24", dish: "Wood-Fired Pizza" },
+              { id: "american", name: "American", image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2099&q=80", price: "$16", dish: "Gourmet Burgers" },
+              { id: "middle_eastern", name: "Middle Eastern", image: "https://images.unsplash.com/photo-1530469912745-a215c6b256ea?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80", price: "$22", dish: "Mezze & Falafel" },
+              { id: "persian", name: "Persian", image: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1935&q=80", price: "$25", dish: "Chelow Kebab" },
             ].map((cuisine, index) => (
-              <div key={index} className="group relative overflow-hidden border border-gray-800 bg-[#090909] hover:border-[#ffc107]/30 transition-all duration-500 rounded-lg">
+              <Link 
+                href={`/search?cuisine=${cuisine.id}`} 
+                key={index}
+                className="group relative overflow-hidden border border-gray-800 bg-[#090909] hover:border-[#ffc107]/30 transition-all duration-500 rounded-lg block"
+              >
                 <div className="absolute -right-4 -top-4">
                   <div className="bg-[#ffc107] text-black font-bold rounded-full w-16 h-16 flex items-center justify-center transform rotate-12 shadow-lg shadow-[#ffc107]/20">
                     <span>{cuisine.price}</span>
@@ -546,7 +550,7 @@ export default function Home() {
                     {cuisine.dish} with certified halal ingredients.
                   </p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
           
