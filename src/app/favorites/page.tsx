@@ -8,6 +8,7 @@ import { supabase } from '@/utils/supabase';
 import RestaurantCard from '@/components/RestaurantCard';
 import { Restaurant } from '@/data/menuData';
 import { Heart } from 'lucide-react';
+import { FAVORITE_CHANGED_EVENT } from '@/components/FavoriteButton';
 
 export default function FavoritesPage() {
   const { user, isLoading } = useAuth();
@@ -21,72 +22,65 @@ export default function FavoritesPage() {
       router.push('/signin');
     }
   }, [isLoading, user, router]);
-  
-  // Fetch user's favorite restaurants
-  useEffect(() => {
-    const getFavorites = async () => {
-      if (!user) return;
-      
-      try {
-        setLoading(true);
-        
-        // Fetch favorites join with restaurant data
-        const { data: favorites, error } = await supabase
-          .from('favorites')
-          .select('restaurant_id')
-          .eq('user_id', user.id);
-        
-        if (error) {
-          throw error;
-        }
-        
-        if (favorites && favorites.length > 0) {
-          // Get the restaurant IDs
-          const restaurantIds = favorites.map(fav => fav.restaurant_id);
-          
-          // Now we would fetch the restaurant details from your API
-          // This is a placeholder - in a real app you'd fetch from your restaurant API
-          const response = await fetch(`/api/restaurants/favorites?ids=${restaurantIds.join(',')}`);
-          
-          if (!response.ok) {
-            throw new Error('Failed to fetch restaurant details');
-          }
-          
-          const { restaurants } = await response.json();
-          setFavoriteRestaurants(restaurants);
-        }
-      } catch (error) {
-        console.error('Error fetching favorites:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    getFavorites();
-  }, [user]);
-  
-  const removeFavorite = async (restaurantId: string) => {
+
+  // Function to fetch favorites
+  const fetchFavorites = async () => {
     if (!user) return;
     
     try {
-      const { error } = await supabase
+      setLoading(true);
+      
+      // Fetch favorites join with restaurant data
+      const { data: favorites, error } = await supabase
         .from('favorites')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('restaurant_id', restaurantId);
+        .select('restaurant_id')
+        .eq('user_id', user.id);
       
       if (error) {
         throw error;
       }
       
-      // Update the UI by removing the restaurant
-      setFavoriteRestaurants(prev => 
-        prev.filter(restaurant => restaurant.id !== restaurantId)
-      );
+      if (favorites && favorites.length > 0) {
+        // Get the restaurant IDs
+        const restaurantIds = favorites.map(fav => fav.restaurant_id);
+        
+        // Now we would fetch the restaurant details from your API
+        // This is a placeholder - in a real app you'd fetch from your restaurant API
+        const response = await fetch(`/api/restaurants/favorites?ids=${restaurantIds.join(',')}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch restaurant details');
+        }
+        
+        const { restaurants } = await response.json();
+        setFavoriteRestaurants(restaurants);
+      } else {
+        setFavoriteRestaurants([]);
+      }
     } catch (error) {
-      console.error('Error removing favorite:', error);
+      console.error('Error fetching favorites:', error);
+    } finally {
+      setLoading(false);
     }
   };
+  
+  // Fetch user's favorite restaurants
+  useEffect(() => {
+    fetchFavorites();
+  }, [user]);
+
+  // Listen for favorite changes
+  useEffect(() => {
+    const handleFavoriteChange = () => {
+      fetchFavorites();
+    };
+
+    window.addEventListener(FAVORITE_CHANGED_EVENT, handleFavoriteChange);
+    
+    return () => {
+      window.removeEventListener(FAVORITE_CHANGED_EVENT, handleFavoriteChange);
+    };
+  }, [user]);
   
   if (isLoading) {
     return (
@@ -118,14 +112,8 @@ export default function FavoritesPage() {
         ) : favoriteRestaurants.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {favoriteRestaurants.map(restaurant => (
-              <div key={restaurant.id} className="relative">
-                <RestaurantCard restaurant={restaurant} />
-                <button
-                  onClick={() => removeFavorite(restaurant.id)}
-                  className="absolute top-3 right-3 bg-black bg-opacity-70 p-2 rounded-full hover:bg-red-600 transition-colors"
-                >
-                  <Heart className="h-5 w-5 text-white fill-white" />
-                </button>
+              <div key={restaurant.id}>
+                <RestaurantCard restaurant={restaurant} showFavoriteButton={true} />
               </div>
             ))}
           </div>

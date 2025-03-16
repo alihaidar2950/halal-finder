@@ -11,6 +11,7 @@ import dynamic from 'next/dynamic';
 import { HalalStatusInfo } from '@/components/halal/HalalStatusInfo';
 import { Database, RefreshCw } from 'lucide-react';
 import { clearCache } from '@/utils/cacheUtils';
+import FavoriteButton from '@/components/FavoriteButton';
 
 // Import the map component dynamically to prevent SSR issues
 const GoogleMapComponent = dynamic(
@@ -161,6 +162,14 @@ export default function RestaurantDetailPage() {
                   ))}
                   <span className="ml-2 text-white">{rating}</span>
                 </div>
+              </div>
+              
+              {/* Add Favorite Button */}
+              <div className="mt-4 md:mt-0">
+                <FavoriteButton 
+                  restaurantId={restaurantId}
+                  size="lg"
+                />
               </div>
             </div>
           </div>
