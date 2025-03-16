@@ -6,12 +6,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/utils/supabase';
 import { toast } from 'sonner';
 import AuthModal from './auth/AuthModal';
+import { Restaurant } from '@/data/menuData';
 
 // Custom event for favorite changes
 export const FAVORITE_CHANGED_EVENT = 'favorite-changed';
 
 interface FavoriteButtonProps {
   restaurantId: string;
+  restaurant?: Restaurant; // Add restaurant object for storing details
   className?: string;
   size?: 'sm' | 'md' | 'lg';
   showBackground?: boolean;
@@ -19,6 +21,7 @@ interface FavoriteButtonProps {
 
 export default function FavoriteButton({
   restaurantId,
+  restaurant,
   className = '',
   size = 'md',
   showBackground = true,
@@ -134,16 +137,41 @@ export default function FavoriteButton({
         // Add to favorites
         console.log(`Adding restaurant ${restaurantId} to favorites for user ${user.id}`);
         
-        const { error } = await supabase
-          .from('favorites')
-          .insert({
-            user_id: user.id,
-            restaurant_id: restaurantId
-          });
-          
-        if (error) {
-          console.error('Error adding to favorites:', error);
-          throw error;
+        // If we have restaurant details, store them with the favorite
+        if (restaurant) {
+          const { error } = await supabase
+            .from('favorites')
+            .insert({
+              user_id: user.id,
+              restaurant_id: restaurantId,
+              restaurant_name: restaurant.name,
+              address: restaurant.address,
+              image_url: restaurant.image,
+              rating: restaurant.rating,
+              price_range: restaurant.priceRange,
+              cuisine_type: restaurant.cuisineType,
+              coordinates: restaurant.coordinates,
+              halal_status: restaurant.halalStatus,
+              last_updated: new Date().toISOString()
+            });
+            
+          if (error) {
+            console.error('Error adding to favorites:', error);
+            throw error;
+          }
+        } else {
+          // Fallback to just storing the ID if we don't have details
+          const { error } = await supabase
+            .from('favorites')
+            .insert({
+              user_id: user.id,
+              restaurant_id: restaurantId
+            });
+            
+          if (error) {
+            console.error('Error adding to favorites:', error);
+            throw error;
+          }
         }
         
         console.log('Successfully added to favorites');

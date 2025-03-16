@@ -106,6 +106,7 @@ export default function RestaurantCard({
         <div className="absolute top-3 right-3 z-10">
           <FavoriteButton 
             restaurantId={id}
+            restaurant={restaurant}
             size="sm"
           />
         </div>

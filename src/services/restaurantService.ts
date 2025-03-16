@@ -120,12 +120,19 @@ export async function fetchRestaurantsByCuisine(
  */
 export async function fetchRestaurantDetails(placeId: string): Promise<Restaurant | null> {
   try {
+    if (!placeId) {
+      console.error('fetchRestaurantDetails called with empty placeId');
+      return null;
+    }
+
+    console.log(`Fetching details for restaurant ID: ${placeId}`);
+    
     // Check if we have cached details for this restaurant
     const cacheKey = generateRestaurantDetailsCacheKey(placeId);
     const cachedDetails = getFromCache<Restaurant>(cacheKey);
     
     if (cachedDetails) {
-      console.log("Using cached restaurant details");
+      console.log(`Using cached details for restaurant: ${placeId}`);
       // Add a fromCache flag for UI indicators
       return {
         ...cachedDetails,
@@ -143,9 +150,9 @@ export async function fetchRestaurantDetails(placeId: string): Promise<Restauran
       // Get the origin (base URL) of the current page
       const origin = window.location.origin;
       apiUrl = `${origin}/api/restaurants/${placeId}`;
+      console.log(`Making API request to: ${apiUrl}`);
     } else {
       // When running on the server, we need a different approach
-      // For now, we'll just return null in server context
       console.warn('Cannot fetch restaurant details in server context');
       return null;
     }
@@ -153,11 +160,19 @@ export async function fetchRestaurantDetails(placeId: string): Promise<Restauran
     const response = await fetch(apiUrl);
     
     if (!response.ok) {
+      console.error(`API request failed with status: ${response.status}, ${response.statusText}`);
       throw new Error(`API request failed with status: ${response.status}`);
     }
     
     const data = await response.json();
+    
+    if (!data || !data.restaurant) {
+      console.error('API response missing restaurant data:', data);
+      return null;
+    }
+    
     const restaurantDetails = data.restaurant;
+    console.log(`Successfully fetched details for restaurant: ${placeId}`);
     
     // Cache the restaurant details
     if (restaurantDetails) {
@@ -166,7 +181,7 @@ export async function fetchRestaurantDetails(placeId: string): Promise<Restauran
     
     return restaurantDetails;
   } catch (error) {
-    console.error("Error fetching restaurant details:", error);
+    console.error(`Error fetching restaurant details for ${placeId}:`, error);
     return null;
   }
 } 
