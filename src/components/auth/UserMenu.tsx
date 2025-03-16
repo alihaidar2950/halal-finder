@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { User, LogOut, Heart, Star, Settings } from 'lucide-react';
+import Image from 'next/image';
 
 export default function UserMenu() {
   const { user, signOut } = useAuth();
@@ -43,25 +44,55 @@ export default function UserMenu() {
     );
   }
 
+  // Get user profile picture if available
+  const userPhotoUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+  
   return (
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
       >
-        <div className="w-8 h-8 bg-[#ffc107] text-black rounded-full flex items-center justify-center">
-          <User className="w-5 h-5" />
-        </div>
+        {userPhotoUrl ? (
+          <Image 
+            src={userPhotoUrl} 
+            alt="Profile" 
+            width={32} 
+            height={32} 
+            className="rounded-full w-8 h-8 object-cover"
+          />
+        ) : (
+          <div className="w-8 h-8 bg-[#ffc107] text-black rounded-full flex items-center justify-center">
+            <User className="w-5 h-5" />
+          </div>
+        )}
         <span className="hidden md:inline font-medium">
-          {user.email?.split('@')[0] || 'User'}
+          {user.email || 'User'}
         </span>
       </button>
 
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10 overflow-hidden">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <p className="font-bold">{user.email?.split('@')[0] || 'User'}</p>
-            <p className="text-gray-500 dark:text-gray-400 text-sm truncate">{user.email}</p>
+            <div className="flex items-center gap-3 mb-2">
+              {userPhotoUrl ? (
+                <Image 
+                  src={userPhotoUrl} 
+                  alt="Profile" 
+                  width={40} 
+                  height={40} 
+                  className="rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-[#ffc107] text-black rounded-full flex items-center justify-center">
+                  <User className="w-6 h-6" />
+                </div>
+              )}
+              <div>
+                <p className="font-bold">{user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">{user.email}</p>
+              </div>
+            </div>
           </div>
           
           <div className="py-2">
