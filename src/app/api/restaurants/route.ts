@@ -58,9 +58,39 @@ const AMERICAN_RESTAURANT_CHAINS = [
   'olive garden', 'outback', 'red lobster', 'texas roadhouse', 'longhorn', 'buffalo wild wings'
 ];
 
+// Enhanced Cache with TTL and geo-proximity
+interface CacheEntry {
+  data: Restaurant[];
+  timestamp: number;
+  location: {
+    lat: number;
+    lng: number;
+    radius: number;
+  };
+}
+
 // Cache to store fetched restaurant data
-const restaurantCache = new Map<string, { data: Restaurant[], timestamp: number }>();
-const CACHE_TTL = 3600000; // 1 hour cache TTL
+const restaurantCache = new Map<string, CacheEntry>();
+
+// Configure cache TTLs based on data type
+const CACHE_TTL = {
+  NEARBY_SEARCH: 24 * 60 * 60 * 1000, // 24 hours for nearby search
+  POPULAR_LOCATIONS: 48 * 60 * 60 * 1000, // 48 hours for popular/busy locations
+  RURAL_LOCATIONS: 168 * 60 * 60 * 1000, // 7 days for rural areas with fewer updates
+  PLACE_DETAILS: 72 * 60 * 60 * 1000 // 72 hours for place details
+};
+
+// Maximum radius (in meters) to consider a cached result valid for a different location
+const LOCATION_CACHE_RADIUS = 500;
+
+// API rate limiting
+const API_CALLS = {
+  lastCalled: 0,
+  minTimeBetweenCalls: 100, // ms between consecutive calls
+  dailyLimit: 1000, // self-imposed daily limit to avoid excessive charges
+  dailyCount: 0,
+  resetDate: new Date().setHours(0, 0, 0, 0)
+};
 
 /**
  * GET handler for the restaurants API
@@ -74,21 +104,63 @@ export async function GET(request: NextRequest) {
   const keyword = searchParams.get('keyword') || 'halal restaurant';
   const pagetoken = searchParams.get('pagetoken');
   const cuisine = searchParams.get('cuisine'); // Get cuisine type if provided
+  const forceRefresh = searchParams.get('refresh') === 'true';
   
   if (!lat || !lng) {
     return NextResponse.json({ error: 'Missing latitude or longitude' }, { status: 400 });
   }
   
   try {
+    // Reset daily count if it's a new day
+    const today = new Date().setHours(0, 0, 0, 0);
+    if (today > API_CALLS.resetDate) {
+      API_CALLS.dailyCount = 0;
+      API_CALLS.resetDate = today;
+    }
+    
+    // Check if we've exceeded our self-imposed daily limit
+    if (API_CALLS.dailyCount >= API_CALLS.dailyLimit) {
+      // Return cached data or limited results if available
+      const cachedResults = findClosestCachedResult(parseFloat(lat), parseFloat(lng), parseInt(radius));
+      if (cachedResults) {
+        return NextResponse.json({ 
+          restaurants: cachedResults.data,
+          fromCache: true,
+          notice: "Daily API limit reached. Showing cached results."
+        });
+      }
+      
+      return NextResponse.json({ 
+        error: 'Daily API limit reached. Please try again tomorrow.',
+        restaurants: [] 
+      }, { status: 429 });
+    }
+    
     // Build unique cache key based on request parameters
     const cacheKey = `${lat}-${lng}-${radius}-${keyword}-${pagetoken || ''}-${cuisine || ''}`;
     
-    // Check if we have a fresh cached response
-    const cachedData = restaurantCache.get(cacheKey);
-    if (cachedData && (Date.now() - cachedData.timestamp < CACHE_TTL)) {
-      const restaurants = cachedData.data;
-      return NextResponse.json({ restaurants, fromCache: true });
+    // Only check cache if not forcing a refresh
+    if (!forceRefresh) {
+      // Check if we have a fresh cached response for the exact location
+      const cachedData = restaurantCache.get(cacheKey);
+      if (cachedData && (Date.now() - cachedData.timestamp < determineCacheTTL(parseFloat(lat), parseFloat(lng)))) {
+        return NextResponse.json({ restaurants: cachedData.data, fromCache: true });
+      }
+      
+      // If no exact match, try to find a nearby cached result
+      const proximityResult = findClosestCachedResult(parseFloat(lat), parseFloat(lng), parseInt(radius));
+      if (proximityResult) {
+        return NextResponse.json({ restaurants: proximityResult.data, fromCache: true, proximityBased: true });
+      }
     }
+    
+    // Rate limiting: Ensure minimum time between API calls
+    const now = Date.now();
+    if (now - API_CALLS.lastCalled < API_CALLS.minTimeBetweenCalls) {
+      await new Promise(resolve => setTimeout(resolve, API_CALLS.minTimeBetweenCalls));
+    }
+    API_CALLS.lastCalled = Date.now();
+    API_CALLS.dailyCount++;
     
     // Modify the keyword to include cuisine if provided
     let searchKeyword = keyword;
@@ -276,56 +348,107 @@ export async function GET(request: NextRequest) {
           );
         }
         
-        // Check in expanded cuisine mappings
-        const expandedMatch = CUISINE_MAPPINGS[cuisineLower] ? 
-          CUISINE_MAPPINGS[cuisineLower].some((relatedCuisine: string) => 
-            restaurant.cuisineType.toLowerCase().includes(relatedCuisine) || 
-            restaurant.name.toLowerCase().includes(relatedCuisine)
-          ) : false;
-        
-        // More advanced matching with cuisine-specific food indicators
-        let specialMatch = false;
-        if (CUISINE_FOOD_INDICATORS[cuisineLower]) {
-          // Check for specific cuisine indicators in name/description
-          specialMatch = CUISINE_FOOD_INDICATORS[cuisineLower].some(indicator => 
-            restaurant.name.toLowerCase().includes(indicator) || 
-            (restaurant.description ? restaurant.description.toLowerCase().includes(indicator) : false)
+        // Special case for Asian cuisine - check subtype matching
+        let subtypeMatch = false;
+        if (cuisineLower === 'asian' && CUISINE_MAPPINGS['asian']) {
+          subtypeMatch = CUISINE_MAPPINGS['asian'].some(subtype => 
+            restaurant.cuisineType.toLowerCase().includes(subtype) || 
+            restaurant.name.toLowerCase().includes(subtype)
           );
         }
         
-        // Check review texts for cuisine mentions (if available)
-        let reviewMatch = false;
-        if (restaurant.reviews && restaurant.reviews.length > 0) {
-          reviewMatch = restaurant.reviews.some(review => {
-            // Check if review mentions the cuisine directly
-            if (review.text && review.text.toLowerCase().includes(cuisineLower)) {
-              return true;
-            }
-            
-            // Check if review mentions any related cuisine terms
-            if (CUISINE_MAPPINGS[cuisineLower] && review.text) {
-              return CUISINE_MAPPINGS[cuisineLower].some(term => 
-                review.text.toLowerCase().includes(term)
-              );
-            }
-            
-            return false;
-          });
+        // Special case for Middle Eastern cuisine
+        if (cuisineLower === 'middle eastern' || cuisineLower === 'middle_eastern') {
+          return directMatch || 
+                 nameMatch || 
+                 HALAL_FRIENDLY_CUISINES.some(c => 
+                   restaurant.cuisineType.toLowerCase().includes(c) ||
+                   restaurant.name.toLowerCase().includes(c)
+                 );
         }
         
-        // Return true if any match type is found
-        return directMatch || nameMatch || expandedMatch || specialMatch || reviewMatch || chainMatch;
+        return directMatch || nameMatch || chainMatch || subtypeMatch;
       });
     }
     
-    // Store in cache with timestamp
-    restaurantCache.set(cacheKey, { data: filteredRestaurants, timestamp: Date.now() });
+    // Store result in cache
+    if (filteredRestaurants.length > 0) {
+      restaurantCache.set(cacheKey, {
+        data: filteredRestaurants,
+        timestamp: Date.now(),
+        location: {
+          lat: parseFloat(lat),
+          lng: parseFloat(lng),
+          radius: parseInt(radius)
+        }
+      });
+    }
     
-    return NextResponse.json({ restaurants: filteredRestaurants, nextPageToken: response.data.next_page_token });
+    return NextResponse.json({ restaurants: filteredRestaurants });
   } catch (error) {
     console.error('Error fetching restaurants:', error);
     return NextResponse.json({ error: 'Failed to fetch restaurants' }, { status: 500 });
   }
+}
+
+/**
+ * Determine the appropriate cache TTL based on location
+ */
+function determineCacheTTL(lat: number, lng: number): number {
+  // For demonstration, this is a simplified implementation
+  // In a real app, you might:
+  // 1. Check if location is in a predefined list of busy areas
+  // 2. Check population density using another API
+  // 3. Use historical data to determine update frequency
+  
+  // For now we'll use a simple heuristic based on coordinates
+  // (This is just a placeholder - replace with actual logic)
+  const isPopularLocation = Math.abs(lat) % 1 < 0.1 && Math.abs(lng) % 1 < 0.1;
+  const isRuralLocation = Math.abs(lat) % 1 > 0.7 || Math.abs(lng) % 1 > 0.7;
+  
+  if (isPopularLocation) {
+    return CACHE_TTL.POPULAR_LOCATIONS;
+  } else if (isRuralLocation) {
+    return CACHE_TTL.RURAL_LOCATIONS;
+  } else {
+    return CACHE_TTL.NEARBY_SEARCH;
+  }
+}
+
+/**
+ * Find the closest cached result within a reasonable proximity
+ */
+function findClosestCachedResult(lat: number, lng: number, requestRadius: number): CacheEntry | null {
+  let closestMatch: CacheEntry | null = null;
+  let minDistance = Infinity;
+  
+  for (const entry of restaurantCache.values()) {
+    // Skip if cache entry is expired
+    if (Date.now() - entry.timestamp > CACHE_TTL.RURAL_LOCATIONS) {
+      continue;
+    }
+    
+    const distance = calculateDistance(
+      lat, 
+      lng, 
+      entry.location.lat, 
+      entry.location.lng
+    );
+    
+    // Accept cache if distance is within LOCATION_CACHE_RADIUS
+    // or if it's within the larger of the request radius and cached radius
+    const maxAcceptableRadius = Math.max(
+      LOCATION_CACHE_RADIUS,
+      Math.min(requestRadius, entry.location.radius) * 0.3
+    );
+    
+    if (distance < maxAcceptableRadius && distance < minDistance) {
+      minDistance = distance;
+      closestMatch = entry;
+    }
+  }
+  
+  return closestMatch;
 }
 
 /**
