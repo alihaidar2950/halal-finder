@@ -116,7 +116,7 @@ export async function fetchRestaurantsByCuisine(
 }
 
 /**
- * Fetch restaurant details by ID (Google Place ID)
+ * Fetch details for a specific restaurant by ID
  */
 export async function fetchRestaurantDetails(placeId: string): Promise<Restaurant | null> {
   try {
@@ -136,7 +136,21 @@ export async function fetchRestaurantDetails(placeId: string): Promise<Restauran
     // No cached details, fetch from API
     // This would typically call our backend API which would then call Google Places API
     // to get detailed information about a specific place
-    const response = await fetch(`/api/restaurants/${placeId}`);
+    let apiUrl = '';
+    
+    // Make sure we're in a browser environment and use full URLs
+    if (typeof window !== 'undefined') {
+      // Get the origin (base URL) of the current page
+      const origin = window.location.origin;
+      apiUrl = `${origin}/api/restaurants/${placeId}`;
+    } else {
+      // When running on the server, we need a different approach
+      // For now, we'll just return null in server context
+      console.warn('Cannot fetch restaurant details in server context');
+      return null;
+    }
+    
+    const response = await fetch(apiUrl);
     
     if (!response.ok) {
       throw new Error(`API request failed with status: ${response.status}`);

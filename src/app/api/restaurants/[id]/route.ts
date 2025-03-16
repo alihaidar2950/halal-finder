@@ -1,27 +1,25 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { Client } from '@googlemaps/google-maps-services-js';
 import { classifyHalalStatus } from '@/utils/halal/classifier';
 
 // Initialize Google Maps client
 const client = new Client({});
 
-type Params = { params: { id: string } };
-
 export async function GET(
-  request: Request,
-  { params }: Params
+  request: NextRequest,
+  { params }: { params: { id: string } }
 ) {
-  // Convert params to a plain value to avoid the async params issue
-  const placeId = String(params.id);
-
-  if (!placeId) {
-    return NextResponse.json(
-      { error: 'Restaurant ID is required' },
-      { status: 400 }
-    );
-  }
-
   try {
+    // Safely extract the ID from params
+    const placeId = params?.id;
+
+    if (!placeId) {
+      return NextResponse.json(
+        { error: 'Restaurant ID is required' },
+        { status: 400 }
+      );
+    }
+
     // Fetch place details from Google Places API
     const response = await client.placeDetails({
       params: {

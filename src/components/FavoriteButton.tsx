@@ -35,22 +35,31 @@ export default function FavoriteButton({
     lg: 'h-6 w-6',
   };
 
-  // Check if restaurant is in favorites when component mounts
+  // Check if restaurant is in favorites when component mounts or user changes
   useEffect(() => {
     const checkIfFavorite = async () => {
-      if (!user) return;
+      if (!user) {
+        console.log('No user, not checking favorites');
+        return;
+      }
       
       try {
-        const { data } = await supabase
+        console.log(`Checking if restaurant ${restaurantId} is favorited by user ${user.id}`);
+        
+        const { data, error } = await supabase
           .from('favorites')
           .select()
           .eq('user_id', user.id)
-          .eq('restaurant_id', restaurantId)
-          .single();
+          .eq('restaurant_id', restaurantId);
           
-        if (data) {
-          setIsFavorite(true);
+        if (error) {
+          console.error('Error checking favorite status:', error);
+          return;
         }
+        
+        const isFav = data && data.length > 0;
+        console.log(`Favorite status for ${restaurantId}: ${isFav ? 'Favorited' : 'Not favorited'}`);
+        setIsFavorite(isFav);
       } catch (error) {
         console.error('Error checking favorite status:', error);
       }
@@ -58,6 +67,9 @@ export default function FavoriteButton({
     
     if (user) {
       checkIfFavorite();
+    } else {
+      // Reset favorite status when user logs out
+      setIsFavorite(false);
     }
   }, [user, restaurantId]);
 
@@ -65,9 +77,13 @@ export default function FavoriteButton({
     e.preventDefault();
     e.stopPropagation();
     
-    if (isLoading || isUpdating) return;
+    if (isLoading || isUpdating) {
+      console.log('Still loading or updating, ignoring click');
+      return;
+    }
     
     if (!user) {
+      console.log('No user logged in, showing auth modal');
       // Show toast message explaining they need to sign in
       toast.info(
         <div className="flex flex-col space-y-2">
@@ -93,14 +109,20 @@ export default function FavoriteButton({
     try {
       if (isFavorite) {
         // Remove from favorites
+        console.log(`Removing restaurant ${restaurantId} from favorites for user ${user.id}`);
+        
         const { error } = await supabase
           .from('favorites')
           .delete()
           .eq('user_id', user.id)
           .eq('restaurant_id', restaurantId);
           
-        if (error) throw error;
+        if (error) {
+          console.error('Error removing from favorites:', error);
+          throw error;
+        }
         
+        console.log('Successfully removed from favorites');
         setIsFavorite(false);
         toast.success('Removed from favorites');
 
@@ -110,6 +132,8 @@ export default function FavoriteButton({
         }));
       } else {
         // Add to favorites
+        console.log(`Adding restaurant ${restaurantId} to favorites for user ${user.id}`);
+        
         const { error } = await supabase
           .from('favorites')
           .insert({
@@ -117,8 +141,12 @@ export default function FavoriteButton({
             restaurant_id: restaurantId
           });
           
-        if (error) throw error;
+        if (error) {
+          console.error('Error adding to favorites:', error);
+          throw error;
+        }
         
+        console.log('Successfully added to favorites');
         setIsFavorite(true);
         toast.success('Added to favorites');
 
@@ -129,7 +157,7 @@ export default function FavoriteButton({
       }
     } catch (error) {
       console.error('Error updating favorite:', error);
-      toast.error('Failed to update favorites');
+      toast.error('Failed to update favorites. Please try again.');
     } finally {
       setIsUpdating(false);
     }

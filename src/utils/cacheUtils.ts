@@ -12,8 +12,25 @@ export const CACHE_EXPIRY = {
   RESTAURANT_DETAILS: 60 * 60 * 1000, // 1 hour for restaurant details
 };
 
+// Check if localStorage is available (client-side only)
+const isLocalStorageAvailable = () => {
+  if (typeof window === 'undefined') return false;
+  
+  try {
+    // Test if localStorage is available
+    const testKey = '__test__';
+    window.localStorage.setItem(testKey, testKey);
+    window.localStorage.removeItem(testKey);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 // Save data to cache
 export function saveToCache<T>(key: string, data: T, expiry: number = CACHE_EXPIRY.SEARCH_RESULTS): void {
+  if (!isLocalStorageAvailable()) return;
+  
   try {
     const cacheItem: CacheItem<T> = {
       data,
@@ -32,6 +49,8 @@ export function saveToCache<T>(key: string, data: T, expiry: number = CACHE_EXPI
 
 // Get data from cache
 export function getFromCache<T>(key: string): T | null {
+  if (!isLocalStorageAvailable()) return null;
+  
   try {
     const cachedData = localStorage.getItem(key);
     if (!cachedData) return null;
@@ -54,6 +73,8 @@ export function getFromCache<T>(key: string): T | null {
 
 // Clear all cache
 export function clearCache(): void {
+  if (!isLocalStorageAvailable()) return;
+  
   try {
     // Clear only our application cache keys (those prefixed with 'halal_finder_')
     Object.keys(localStorage).forEach(key => {
@@ -68,6 +89,8 @@ export function clearCache(): void {
 
 // Clear old cache items when storage is full
 function clearOldCacheItems(): void {
+  if (!isLocalStorageAvailable()) return;
+  
   try {
     const cacheKeys = Object.keys(localStorage)
       .filter(key => key.startsWith('halal_finder_'));
