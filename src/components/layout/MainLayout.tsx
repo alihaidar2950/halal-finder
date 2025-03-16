@@ -20,7 +20,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       
       <footer className="bg-black text-white p-12 border-t border-gray-800">
         <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div>
               <h3 className="text-2xl font-bold mb-6">
                 <span className="text-[#ffc107]">HALAL</span>
@@ -34,18 +34,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
               <h4 className="text-[#ffc107] text-sm uppercase tracking-wider mb-6">NAVIGATION</h4>
               <ul className="space-y-3">
                 <li><Link href="/" className="text-gray-300 hover:text-[#ffc107]">HOME</Link></li>
-                <li><Link href="/cuisines" className="text-gray-300 hover:text-[#ffc107]">MENU</Link></li>
-                <li><Link href="/promotions" className="text-gray-300 hover:text-[#ffc107]">PROMOTIONS</Link></li>
-                <li><Link href="/events" className="text-gray-300 hover:text-[#ffc107]">EVENTS</Link></li>
-                <li><Link href="/gallery" className="text-gray-300 hover:text-[#ffc107]">GALLERY</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-[#ffc107] text-sm uppercase tracking-wider mb-6">INFORMATION</h4>
-              <ul className="space-y-3">
-                <li><Link href="/terms" className="text-gray-300 hover:text-[#ffc107]">TERMS OF SERVICE</Link></li>
-                <li><Link href="/privacy" className="text-gray-300 hover:text-[#ffc107]">PRIVACY POLICY</Link></li>
-                <li><Link href="/booking" className="text-gray-300 hover:text-[#ffc107]">BOOKING</Link></li>
+                <li><Link href="/restaurants" className="text-gray-300 hover:text-[#ffc107]">RESTAURANTS</Link></li>
+                <li><Link href="/search" className="text-gray-300 hover:text-[#ffc107]">SEARCH</Link></li>
+                <li><Link href="/favorites" className="text-gray-300 hover:text-[#ffc107]">FAVORITES</Link></li>
+                <li><Link href="/about" className="text-gray-300 hover:text-[#ffc107]">ABOUT</Link></li>
                 <li><Link href="/contact" className="text-gray-300 hover:text-[#ffc107]">CONTACT</Link></li>
               </ul>
             </div>
@@ -80,6 +72,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
           </div>
           <div className="mt-16 pt-8 border-t border-gray-800 text-center text-gray-400 text-sm">
             <p>© {new Date().getFullYear()} Halal Finder. All rights reserved.</p>
+            <div className="mt-4">
+              <Link href="/terms" className="text-gray-500 hover:text-[#ffc107] mx-2">Terms of Service</Link>
+              <Link href="/privacy" className="text-gray-500 hover:text-[#ffc107] mx-2">Privacy Policy</Link>
+            </div>
           </div>
         </div>
       </footer>
