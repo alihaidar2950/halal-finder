@@ -80,7 +80,7 @@ export default function SignUpForm({ redirectTo = '/' }: SignUpFormProps) {
           <p>Check your email for a confirmation link to complete your registration.</p>
         </div>
         <div className="text-center mt-4">
-          <Link href="/signin" className="text-orange-500 hover:text-orange-600">
+          <Link href="/signin" className="text-[#ffc107] hover:text-[#e6b006] font-medium">
             Back to Sign In
           </Link>
         </div>
@@ -90,7 +90,7 @@ export default function SignUpForm({ redirectTo = '/' }: SignUpFormProps) {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <h2 className="text-3xl font-bold mb-6 text-center text-orange-500">Sign Up</h2>
+      <h2 className="text-3xl font-bold mb-6 text-center text-[#ffc107]">Sign Up</h2>
       
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -109,7 +109,7 @@ export default function SignUpForm({ redirectTo = '/' }: SignUpFormProps) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-orange-500 focus:border-orange-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-[#ffc107] focus:border-[#ffc107]"
             placeholder="your@email.com"
           />
         </div>
@@ -124,7 +124,7 @@ export default function SignUpForm({ redirectTo = '/' }: SignUpFormProps) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-orange-500 focus:border-orange-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-[#ffc107] focus:border-[#ffc107]"
             placeholder="••••••••"
           />
         </div>
@@ -139,7 +139,7 @@ export default function SignUpForm({ redirectTo = '/' }: SignUpFormProps) {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-orange-500 focus:border-orange-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-[#ffc107] focus:border-[#ffc107]"
             placeholder="••••••••"
           />
         </div>
@@ -148,7 +148,7 @@ export default function SignUpForm({ redirectTo = '/' }: SignUpFormProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-4 rounded-lg transition duration-200 disabled:opacity-50"
+            className="w-full bg-[#ffc107] hover:bg-[#e6b006] text-black font-medium py-3 px-4 rounded-lg transition duration-200 disabled:opacity-50"
           >
             {isLoading ? 'Signing up...' : 'Sign Up'}
           </button>
@@ -198,7 +198,7 @@ export default function SignUpForm({ redirectTo = '/' }: SignUpFormProps) {
       <div className="text-center mt-6">
         <p className="text-gray-600">
           Already have an account?{' '}
-          <Link href="/signin" className="text-orange-500 hover:text-orange-600 font-medium">
+          <Link href="/signin" className="text-[#ffc107] hover:text-[#e6b006] font-medium">
             Sign in
           </Link>
         </p>

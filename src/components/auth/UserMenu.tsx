@@ -29,13 +29,13 @@ export default function UserMenu() {
       <div className="flex gap-4">
         <Link
           href="/signin"
-          className="px-4 py-2 text-orange-500 hover:text-orange-600 font-medium"
+          className="px-4 py-2 text-[#ffc107] hover:text-[#e6b006] font-medium"
         >
           Sign In
         </Link>
         <Link
           href="/signup"
-          className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium"
+          className="px-4 py-2 bg-[#ffc107] hover:bg-[#e6b006] text-black rounded-lg font-medium"
         >
           Sign Up
         </Link>
@@ -49,7 +49,7 @@ export default function UserMenu() {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
       >
-        <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center">
+        <div className="w-8 h-8 bg-[#ffc107] text-black rounded-full flex items-center justify-center">
           <User className="w-5 h-5" />
         </div>
         <span className="hidden md:inline font-medium">
