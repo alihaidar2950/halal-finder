@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { User, LogOut, Heart, Star, Settings } from 'lucide-react';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
-// Debug component to help find the profile image
-const ProfileImage = ({ user }: { user: any }) => {
+// Profile image component that tries multiple possible locations for the user's avatar
+const ProfileImage = ({ user }: { user: SupabaseUser }) => {
   // Try all possible locations for the profile image
   const possibleImageUrls = [
     user.user_metadata?.avatar_url,
@@ -14,9 +16,6 @@ const ProfileImage = ({ user }: { user: any }) => {
     user.user_metadata?.user_picture,
     user.user_metadata?.profile, 
     user.user_metadata?.photo,
-    // Try to access nested structures
-    user.user_metadata?.identity?.avatar_url,
-    user.user_metadata?.identity?.picture,
     user.identities?.[0]?.identity_data?.avatar_url,
     user.identities?.[0]?.identity_data?.picture,
     user.app_metadata?.picture,
@@ -25,9 +24,6 @@ const ProfileImage = ({ user }: { user: any }) => {
 
   const [imgSrc, setImgSrc] = useState<string | null>(possibleImageUrls[0] || null);
   const [imgError, setImgError] = useState(false);
-
-  console.log('Debug - All possible profile URLs:', possibleImageUrls);
-  console.log('Debug - Selected URL:', imgSrc);
 
   if (!imgSrc || imgError) {
     return (
@@ -43,7 +39,6 @@ const ProfileImage = ({ user }: { user: any }) => {
       alt="Profile" 
       className="h-full w-full object-cover"
       onError={() => {
-        console.log('Image failed to load:', imgSrc);
         // Try the next URL if this one fails
         const currentIndex = possibleImageUrls.indexOf(imgSrc);
         if (currentIndex < possibleImageUrls.length - 1) {
@@ -59,31 +54,61 @@ const ProfileImage = ({ user }: { user: any }) => {
 export default function UserMenu() {
   const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [position, setPosition] = useState({ top: 0, right: 0 });
 
-  // Extended debugging
+  // Handle mounting for portal rendering
   useEffect(() => {
-    if (user) {
-      console.log('Full user object:', JSON.stringify(user, null, 2));
-      console.log('User metadata:', user.user_metadata);
-      console.log('User identities:', user.identities);
-      console.log('App metadata:', user.app_metadata);
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  // Calculate position of dropdown
+  useEffect(() => {
+    if (buttonRef.current && isOpen) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const isMobile = window.innerWidth < 768;
+      
+      setPosition({
+        top: isMobile ? rect.bottom + 10 : rect.bottom + 10,
+        right: isMobile ? window.innerWidth - rect.right - (rect.width / 2) + 10 : window.innerWidth - rect.right
+      });
     }
-  }, [user]);
+  }, [isOpen]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node) && 
+          buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
         setIsOpen(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
     };
   }, []);
+
+  const handleMenuItemClick = (callback?: () => void) => {
+    // Stop event propagation
+    return (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setIsOpen(false);
+      if (callback) callback();
+    };
+  };
 
   if (!user) {
     return (
@@ -105,12 +130,16 @@ export default function UserMenu() {
   }
   
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative" onClick={(e) => e.stopPropagation()}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-700"
+        ref={buttonRef}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
       >
-        <div className="w-8 h-8 rounded-full overflow-hidden">
+        <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-[#ffc107]">
           <ProfileImage user={user} />
         </div>
         <span className="hidden md:inline font-medium">
@@ -118,72 +147,70 @@ export default function UserMenu() {
         </span>
       </button>
 
-      {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10 overflow-hidden text-left">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      {isOpen && mounted && createPortal(
+        <div 
+          ref={menuRef}
+          className="fixed w-[calc(100vw-2rem)] md:w-72 bg-[#222] border-2 border-[#ffc107] rounded-lg shadow-2xl overflow-hidden text-left"
+          style={{
+            top: `${position.top}px`,
+            right: `${position.right}px`,
+            boxShadow: '0 0 20px rgba(255, 193, 7, 0.5), 0 10px 30px rgba(0, 0, 0, 0.8)',
+            zIndex: 999999,
+            pointerEvents: 'auto'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="p-4 border-b border-[#ffc107]/40 bg-gradient-to-b from-[#222] to-[#111]">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-full overflow-hidden">
+              <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-[#ffc107] shadow-2xl" style={{boxShadow: '0 0 10px rgba(255, 193, 7, 0.3)'}}>
                 <ProfileImage user={user} />
               </div>
               <div>
-                <p className="font-bold">{user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}</p>
-                <p className="text-gray-500 dark:text-gray-400 text-sm">{user.email}</p>
+                <p className="font-bold text-[#ffc107] text-lg">
+                  {user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
+                </p>
+                <p className="text-white text-sm">{user.email}</p>
               </div>
             </div>
-            
-            {/* Debug information - only visible in development */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mt-2 text-xs bg-gray-100 dark:bg-gray-900 p-2 rounded overflow-auto max-h-32">
-                <p className="font-bold">Debug Info:</p>
-                <p>Provider: {user.app_metadata?.provider || 'unknown'}</p>
-                <p>Has Picture: {!!user.user_metadata?.picture ? 'Yes' : 'No'}</p>
-                <p>Has Avatar: {!!user.user_metadata?.avatar_url ? 'Yes' : 'No'}</p>
-              </div>
-            )}
           </div>
           
-          <div className="py-2">
-            <Link 
+          <div className="py-1 bg-[#222]">
+            <a
               href="/profile" 
-              className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-black/50 transition-colors cursor-pointer"
+              onClick={handleMenuItemClick()}
             >
-              <Settings className="w-5 h-5 text-gray-500" />
-              <span>Profile Settings</span>
-            </Link>
+              <Settings className="w-5 h-5 text-[#ffc107]" />
+              <span className="text-white font-medium">Profile Settings</span>
+            </a>
             
-            <Link 
+            <a
               href="/favorites" 
-              className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-black/50 transition-colors cursor-pointer"
+              onClick={handleMenuItemClick()}
             >
-              <Heart className="w-5 h-5 text-gray-500" />
-              <span>Favorite Restaurants</span>
-            </Link>
+              <Heart className="w-5 h-5 text-[#ffc107]" />
+              <span className="text-white font-medium">Favorite Restaurants</span>
+            </a>
             
-            <Link 
-              href="/reviews" 
-              className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              onClick={() => setIsOpen(false)}
-            >
-              <Star className="w-5 h-5 text-gray-500" />
-              <span>My Reviews</span>
-            </Link>
+            {/* Disabled version of the Reviews link */}
+            <div className="flex items-center gap-3 px-4 py-3 opacity-50 cursor-not-allowed">
+              <Star className="w-5 h-5 text-[#ffc107]" />
+              <span className="text-white font-medium">My Reviews (Coming Soon)</span>
+            </div>
           </div>
           
-          <div className="border-t border-gray-200 dark:border-gray-700 py-2">
+          <div className="border-t border-[#ffc107]/40 py-1 bg-gradient-to-t from-[#111] to-[#222]">
             <button
-              onClick={() => {
-                signOut();
-                setIsOpen(false);
-              }}
-              className="flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors w-full text-left"
+              onClick={handleMenuItemClick(signOut)}
+              className="flex items-center gap-3 px-4 py-3 text-red-300 hover:bg-black/50 hover:text-red-200 transition-colors w-full text-left"
             >
               <LogOut className="w-5 h-5" />
-              <span>Sign Out</span>
+              <span className="font-medium">Sign Out</span>
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

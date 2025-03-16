@@ -5,7 +5,6 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "sonner";
 import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -41,7 +40,6 @@ export default function RootLayout({
             <main className="flex-grow pt-24">
               {children}
             </main>
-            <Footer />
           </div>
           <Analytics />
           <Toaster 
