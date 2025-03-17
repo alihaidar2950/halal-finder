@@ -31,7 +31,6 @@ interface ExtendedRestaurant extends Restaurant {
     day: string;
     hours: string;
   }>;
-  photos?: string[];
   website?: string;
 }
 
@@ -44,6 +43,7 @@ export default function RestaurantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fromCache, setFromCache] = useState(false);
+  const [mainImageError, setMainImageError] = useState(false);
 
   const fetchData = async (forceRefresh = false) => {
     try {
@@ -98,8 +98,23 @@ export default function RestaurantDetailPage() {
 
   const { name, description, priceRange, image, rating, cuisineType, address, phone, coordinates } = restaurant;
   const hours = restaurant.hours || [];
-  const additionalPhotos = restaurant.photos || [];
   const website = restaurant.website || '';
+  
+  // Process photos, ensuring we handle both string and object formats
+  const photoUrls: string[] = [];
+  if (restaurant.photos && Array.isArray(restaurant.photos)) {
+    restaurant.photos.forEach(photo => {
+      if (typeof photo === 'string') {
+        photoUrls.push(photo);
+      } else if (photo && typeof photo === 'object') {
+        // Use type assertion for photo objects that might come from the API
+        const photoObj = photo as {url?: string};
+        if (photoObj.url) {
+          photoUrls.push(photoObj.url);
+        }
+      }
+    });
+  }
 
   return (
     <div className="bg-black min-h-screen text-white">
@@ -128,9 +143,16 @@ export default function RestaurantDetailPage() {
 
         {/* Hero Section */}
         <div className="relative h-96 mb-10 overflow-hidden border border-gray-800">
-          {image ? (
+          {image && !mainImageError ? (
             <img 
               src={image} 
+              alt={name} 
+              className="w-full h-full object-cover"
+              onError={() => setMainImageError(true)}
+            />
+          ) : photoUrls.length > 0 ? (
+            <img 
+              src={photoUrls[0]} 
               alt={name} 
               className="w-full h-full object-cover"
             />
@@ -236,20 +258,22 @@ export default function RestaurantDetailPage() {
             )}
 
             {/* Photos Gallery (if available) */}
-            {additionalPhotos.length > 0 && (
+            {photoUrls.length > 0 && (
               <div className="mb-10">
                 <h2 className="text-2xl font-bold mb-4">
                   <span className="text-[#ffc107]">PHOTO</span> GALLERY
                 </h2>
                 <div className="h-[1px] w-16 bg-gray-800 mb-6"></div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {additionalPhotos.map((photo, index) => (
+                  {photoUrls.map((photoUrl, index) => (
                     <div key={index} className="aspect-square overflow-hidden border border-gray-800">
-                      <img 
-                        src={photo} 
-                        alt={`${name} - photo ${index+1}`} 
-                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
-                      />
+                      {photoUrl && (
+                        <img 
+                          src={photoUrl} 
+                          alt={`${name} - photo ${index+1}`} 
+                          className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                        />
+                      )}
                     </div>
                   ))}
                 </div>
@@ -309,15 +333,96 @@ export default function RestaurantDetailPage() {
                     zoom={15}
                   />
                 </div>
-                <div className="mt-4">
+                <div className="mt-4 space-y-2">
                   <a 
                     href={`https://www.google.com/maps/dir/?api=1&destination=${coordinates.lat},${coordinates.lng}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block text-center bg-[#232323] hover:bg-[#343434] text-white border border-[#ffc107] px-4 py-2 transition-colors"
+                    className="block text-center bg-[#ffc107] hover:bg-[#e6b006] text-black font-medium px-4 py-3 transition-colors"
                   >
-                    GET DIRECTIONS
+                    <div className="flex items-center justify-center">
+                      <MapPinIcon className="h-5 w-5 mr-2" />
+                      GET DIRECTIONS
+                    </div>
                   </a>
+                  
+                  <p className="text-center text-gray-400 text-xs my-2">Select a transportation mode:</p>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <a 
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${coordinates.lat},${coordinates.lng}&travelmode=driving`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-center bg-[#232323] hover:bg-[#343434] text-white border border-gray-700 hover:border-[#ffc107] px-2 py-2 transition-colors"
+                      aria-label="Get driving directions"
+                    >
+                      <div className="flex flex-col items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C1.4 11.3 1 12.1 1 13v3c0 .6.4 1 1 1h2"></path>
+                          <circle cx="7" cy="17" r="2"></circle>
+                          <path d="M9 17h6"></path>
+                          <circle cx="17" cy="17" r="2"></circle>
+                        </svg>
+                        <span className="text-xs">DRIVING</span>
+                      </div>
+                    </a>
+                    
+                    <a 
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${coordinates.lat},${coordinates.lng}&travelmode=walking`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-center bg-[#232323] hover:bg-[#343434] text-white border border-gray-700 hover:border-[#ffc107] px-2 py-2 transition-colors"
+                      aria-label="Get walking directions"
+                    >
+                      <div className="flex flex-col items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="5" r="2"></circle>
+                          <path d="m12 9-3 5.2a1 1 0 0 0 .7 1.5L12 16"></path>
+                          <path d="m12 9 3 5.2a1 1 0 0 1-.7 1.5L12 16"></path>
+                          <path d="m12 16-1 4"></path>
+                          <path d="m12 16 1 4"></path>
+                          <path d="M8 13h8"></path>
+                        </svg>
+                        <span className="text-xs">WALKING</span>
+                      </div>
+                    </a>
+                    
+                    <a 
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${coordinates.lat},${coordinates.lng}&travelmode=transit`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-center bg-[#232323] hover:bg-[#343434] text-white border border-gray-700 hover:border-[#ffc107] px-2 py-2 transition-colors"
+                      aria-label="Get transit directions"
+                    >
+                      <div className="flex flex-col items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                          <path d="M16 16h.01"></path>
+                          <path d="M8 16h.01"></path>
+                          <path d="M3 10h18"></path>
+                        </svg>
+                        <span className="text-xs">TRANSIT</span>
+                      </div>
+                    </a>
+
+                    <a 
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${coordinates.lat},${coordinates.lng}&travelmode=bicycling`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-center bg-[#232323] hover:bg-[#343434] text-white border border-gray-700 hover:border-[#ffc107] px-2 py-2 transition-colors"
+                      aria-label="Get cycling directions"
+                    >
+                      <div className="flex flex-col items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="6" cy="17" r="3"></circle>
+                          <circle cx="18" cy="17" r="3"></circle>
+                          <path d="M7 11 11.4 7a1 1 0 0 1 1.6.7V16"></path>
+                          <path d="m21 11-4-3"></path>
+                        </svg>
+                        <span className="text-xs">CYCLING</span>
+                      </div>
+                    </a>
+                  </div>
                 </div>
               </div>
             )}

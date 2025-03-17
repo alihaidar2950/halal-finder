@@ -94,9 +94,9 @@ export async function GET(
     
     // Process and format the response
     const restaurant = {
-      id: place.place_id,
-      placeId: place.place_id,
-      name: place.name,
+      id: place.place_id || '',
+      placeId: place.place_id || '',
+      name: place.name || '',
       cuisineType: place.types?.filter(type => 
         !['restaurant', 'food', 'point_of_interest', 'establishment'].includes(type)
       ).join(', ') || 'Restaurant',
@@ -110,11 +110,13 @@ export async function GET(
       openingHours: place.opening_hours?.weekday_text || [],
       priceLevel: place.price_level || 0,
       website: place.website || place.url || '',
-      photos: place.photos?.map(photo => ({
-        url: `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference=${photo.photo_reference}&key=${process.env.GOOGLE_MAPS_API_KEY}`,
-        width: photo.width,
-        height: photo.height
-      })) || [],
+      photos: place.photos?.map(photo => 
+        `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference=${photo.photo_reference}&key=${process.env.GOOGLE_MAPS_API_KEY}`
+      ) || [],
+      // Add the first photo as the main image
+      image: place.photos && place.photos.length > 0 
+        ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photoreference=${place.photos[0].photo_reference}&key=${process.env.GOOGLE_MAPS_API_KEY}`
+        : '',
       reviews: place.reviews?.map(review => ({
         author: review.author_name,
         rating: review.rating,
@@ -123,6 +125,8 @@ export async function GET(
         profilePhotoUrl: review.profile_photo_url
       })) || [],
       reviewCount: place.user_ratings_total || 0,
+      description: '',
+      priceRange: priceRangeToDollarSigns(place.price_level || 0),
     };
     
     // Store in cache with location data for better proximity searches
@@ -149,7 +153,7 @@ export async function GET(
       halalConfidence: confidence
     };
 
-    return NextResponse.json({ restaurant });
+    return NextResponse.json({ restaurant: classifiedRestaurant });
   } catch (error) {
     console.error('Error fetching restaurant details:', error);
     return NextResponse.json({ error: 'Failed to fetch restaurant details' }, { status: 500 });
@@ -157,50 +161,23 @@ export async function GET(
 }
 
 // Helper function to parse opening hours
-function parseOpeningHours(openingHours?: { weekday_text?: string[] }) {
-  if (!openingHours || !openingHours.weekday_text) {
-    return [];
-  }
-  
-  return openingHours.weekday_text.map((day: string) => {
-    const [dayName, hours] = day.split(': ');
-    return { day: dayName, hours };
-  });
-}
 
 // Helper function to infer cuisine type from place types
-function inferCuisineType(types: string[]): string {
-  // Map Google place types to our cuisine categories
-  const typeMap: Record<string, string> = {
-    'restaurant': 'restaurant',
-    'food': 'restaurant',
-    'meal_takeaway': 'restaurant',
-    'meal_delivery': 'restaurant',
-    'bakery': 'bakery',
-    'cafe': 'cafe',
-    'bar': 'bar',
-    'indian_restaurant': 'indian',
-    'chinese_restaurant': 'asian',
-    'japanese_restaurant': 'asian',
-    'thai_restaurant': 'asian',
-    'vietnamese_restaurant': 'asian',
-    'korean_restaurant': 'asian',
-    'italian_restaurant': 'italian',
-    'mexican_restaurant': 'mexican',
-    'middle_eastern_restaurant': 'middle_eastern',
-    'lebanese_restaurant': 'lebanese',
-    'turkish_restaurant': 'turkish',
-    'mediterranean_restaurant': 'mediterranean',
-    'american_restaurant': 'american',
-  };
 
-  // Try to find a matching cuisine type
-  for (const type of types) {
-    if (typeMap[type]) {
-      return typeMap[type];
-    }
+// Helper function to convert price level to dollar signs
+function priceRangeToDollarSigns(priceLevel: number): string {
+  switch (priceLevel) {
+    case 0:
+      return '$';
+    case 1:
+      return '$';
+    case 2:
+      return '$$';
+    case 3:
+      return '$$$';
+    case 4:
+      return '$$$$';
+    default:
+      return '$';
   }
-
-  // If we can't find a match, default to 'restaurant'
-  return 'halal';
 } 
