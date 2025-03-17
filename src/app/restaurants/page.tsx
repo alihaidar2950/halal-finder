@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCurrentLocation, RestaurantWithDistance } from '@/utils/locationUtils';
@@ -15,7 +15,8 @@ import {
   clearCache
 } from "@/utils/cacheUtils";
 
-export default function RestaurantsPage() {
+// Create a separate client component to use the hooks
+function RestaurantsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const query = searchParams.get("q") || "";
@@ -366,5 +367,26 @@ export default function RestaurantsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Loading fallback component
+function RestaurantsLoading() {
+  return (
+    <div className="container mx-auto px-4 py-8 min-h-screen bg-black text-white">
+      <div className="py-16 text-center">
+        <div className="animate-spin h-12 w-12 border-4 border-[#ffc107] border-t-transparent rounded-full mx-auto mb-4"></div>
+        <p className="mt-4 text-gray-400">Loading restaurant search...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main export component with Suspense
+export default function RestaurantsPage() {
+  return (
+    <Suspense fallback={<RestaurantsLoading />}>
+      <RestaurantsContent />
+    </Suspense>
   );
 } 
