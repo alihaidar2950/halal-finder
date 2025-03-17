@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+import { clearCache } from "@/utils/cacheUtils";
 
 export default function SearchBar() {
   const [query, setQuery] = useState("");
@@ -10,8 +11,13 @@ export default function SearchBar() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Clear the cache for new searches to ensure fresh results
+    clearCache();
+    
     if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+      // Add forceRefresh parameter to ensure we get fresh results
+      router.push(`/restaurants?q=${encodeURIComponent(query.trim())}&forceRefresh=true`);
     }
   };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
 import GoogleMapComponent from "@/components/maps/GoogleMapComponent";
@@ -9,8 +9,9 @@ import {
   RestaurantWithDistance
 } from "@/utils/locationUtils";
 import { fetchNearbyRestaurants } from "@/services/restaurantService";
-import { MapPin, Utensils, Award, Phone, Mail, ChevronRight } from "lucide-react";
+import { MapPin, Utensils, Award, Phone, Mail, ChevronRight, ArrowDown, RefreshCw } from "lucide-react";
 import RestaurantCardGrid from "@/components/RestaurantCardGrid";
+import { clearCache } from "@/utils/cacheUtils";
 
 export default function Home() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -20,12 +21,16 @@ export default function Home() {
   const [maxDistance, setMaxDistance] = useState(5); // Default 5km radius
   const [locationPermissionRequested, setLocationPermissionRequested] = useState(false);
   const [fromCache, setFromCache] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const restaurantSectionRef = useRef<HTMLDivElement>(null);
+  const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
 
   useEffect(() => {
     // Function to get user location and fetch nearby restaurants
     const fetchLocationAndRestaurants = async () => {
       try {
         setLoading(true);
+        setIsSearching(true);
         const location = await getCurrentLocation();
         setUserLocation(location);
         
@@ -40,6 +45,17 @@ export default function Home() {
         setFromCache(results.length > 0 && results[0].fromCache === true);
         setNearbyRestaurants(results);
         setLoading(false);
+        
+        // Scroll to restaurant section after results load
+        setTimeout(() => {
+          if (restaurantSectionRef.current) {
+            restaurantSectionRef.current.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start' 
+            });
+          }
+          setIsSearching(false);
+        }, 300);
       } catch (error) {
         // Create a more informative error message
         let errorMessage = "Unable to access your location.";
@@ -56,6 +72,7 @@ export default function Home() {
         
         setError(errorMessage);
         setLoading(false);
+        setIsSearching(false);
         
         // Fallback to a default location (Ottawa center)
         const defaultLocation = { lat: 45.4215, lng: -75.6972 };
@@ -70,6 +87,16 @@ export default function Home() {
           );
           
           setNearbyRestaurants(restaurants);
+          
+          // Scroll to restaurant section after results load
+          setTimeout(() => {
+            if (restaurantSectionRef.current) {
+              restaurantSectionRef.current.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+              });
+            }
+          }, 300);
         } catch {
           // Catch any errors that occur during fetch
           setError("Unable to fetch restaurants with default location. Please try again later.");
@@ -87,6 +114,18 @@ export default function Home() {
 
   const handleLocationRequest = () => {
     setLocationPermissionRequested(true);
+    setIsSearching(true);
+    
+    // Show visual feedback immediately
+    const scrollToFeatures = () => {
+      // Scroll halfway to features section to let user know something is happening
+      window.scrollTo({
+        top: window.innerHeight * 0.5,
+        behavior: 'smooth'
+      });
+    };
+    
+    scrollToFeatures();
   };
 
   const filterByMaxDistance = async (maxDist: number) => {
@@ -123,6 +162,58 @@ export default function Home() {
       );
       
       setNearbyRestaurants(restaurants);
+      setLoading(false);
+    }
+  };
+
+  // Add function to clear cache and refresh results
+  const handleClearCache = async () => {
+    if (userLocation) {
+      clearCache();
+      setLoading(true);
+      setFromCache(false);
+      
+      // Re-fetch with force refresh
+      try {
+        const results = await fetchNearbyRestaurants(
+          userLocation.lat,
+          userLocation.lng,
+          maxDistance * 1000,
+          true, // force refresh
+          selectedCuisine || undefined
+        );
+        
+        setNearbyRestaurants(results);
+      } catch (e) {
+        console.error("Error refreshing data:", e);
+        setError("Error refreshing data. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  // Add function to filter by cuisine
+  const handleCuisineSelect = async (cuisine: string | null) => {
+    if (!userLocation) return;
+    
+    setSelectedCuisine(cuisine);
+    setLoading(true);
+    
+    try {
+      const results = await fetchNearbyRestaurants(
+        userLocation.lat,
+        userLocation.lng,
+        maxDistance * 1000,
+        false,
+        cuisine || undefined
+      );
+      
+      setFromCache(results.length > 0 && results[0].fromCache === true);
+      setNearbyRestaurants(results);
+    } catch (error) {
+      console.error("Error filtering by cuisine:", error);
+    } finally {
       setLoading(false);
     }
   };
@@ -210,6 +301,13 @@ export default function Home() {
                 </div>
               ))}
             </div>
+            
+            {isSearching && (
+              <div className="absolute bottom-8 left-0 right-0 flex flex-col items-center animate-pulse">
+                <p className="text-[#ffc107] mb-2">Searching for restaurants</p>
+                <ArrowDown className="h-6 w-6 text-[#ffc107] animate-bounce" />
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -376,7 +474,7 @@ export default function Home() {
 
       {/* Nearby Restaurants Section (conditionally rendered) */}
       {locationPermissionRequested && (
-        <section id="nearby-restaurants" className="py-20 bg-[#0a0a0a] border-t border-gray-800">
+        <section id="nearby-restaurants" ref={restaurantSectionRef} className="py-20 bg-[#0a0a0a] border-t border-gray-800">
           <div className="container mx-auto px-6">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold mb-3">
@@ -403,8 +501,8 @@ export default function Home() {
                       onClick={() => filterByMaxDistance(5)}
                       className={`px-6 py-2 border-2 rounded-none ${
                         maxDistance === 5 
-                          ? "bg-[#ffc107] text-black border-[#ffc107]" 
-                          : "bg-transparent text-white border-gray-700 hover:border-[#ffc107] hover:text-[#ffc107]"
+                          ? 'bg-[#ffc107] text-black border-[#ffc107]' 
+                          : 'bg-transparent text-white border-gray-700 hover:border-[#ffc107] hover:text-[#ffc107]'
                       } transition-colors`}
                     >
                       Within 5km
@@ -413,8 +511,8 @@ export default function Home() {
                       onClick={() => filterByMaxDistance(10)}
                       className={`px-6 py-2 border-2 rounded-none ${
                         maxDistance === 10 
-                          ? "bg-[#ffc107] text-black border-[#ffc107]" 
-                          : "bg-transparent text-white border-gray-700 hover:border-[#ffc107] hover:text-[#ffc107]"
+                          ? 'bg-[#ffc107] text-black border-[#ffc107]' 
+                          : 'bg-transparent text-white border-gray-700 hover:border-[#ffc107] hover:text-[#ffc107]'
                       } transition-colors`}
                     >
                       Within 10km
@@ -423,8 +521,8 @@ export default function Home() {
                       onClick={() => filterByMaxDistance(20)}
                       className={`px-6 py-2 border-2 rounded-none ${
                         maxDistance === 20 
-                          ? "bg-[#ffc107] text-black border-[#ffc107]" 
-                          : "bg-transparent text-white border-gray-700 hover:border-[#ffc107] hover:text-[#ffc107]"
+                          ? 'bg-[#ffc107] text-black border-[#ffc107]' 
+                          : 'bg-transparent text-white border-gray-700 hover:border-[#ffc107] hover:text-[#ffc107]'
                       } transition-colors`}
                     >
                       Within 20km
@@ -433,17 +531,60 @@ export default function Home() {
                       onClick={() => filterByMaxDistance(40)}
                       className={`px-6 py-2 border-2 rounded-none ${
                         maxDistance === 40 
-                          ? "bg-[#ffc107] text-black border-[#ffc107]" 
-                          : "bg-transparent text-white border-gray-700 hover:border-[#ffc107] hover:text-[#ffc107]"
+                          ? 'bg-[#ffc107] text-black border-[#ffc107]' 
+                          : 'bg-transparent text-white border-gray-700 hover:border-[#ffc107] hover:text-[#ffc107]'
                       } transition-colors`}
                     >
                       Within 40km
                     </button>
                   </div>
                   
-                  <p className="text-center text-gray-400 mb-10">
-                    Showing <span className="text-[#ffc107]">{filteredRestaurants.length}</span> restaurants within <span className="text-[#ffc107]">{maxDistance}km</span>
-                  </p>
+                  <div className="flex flex-wrap justify-between items-center mb-10">
+                    <p className="text-gray-400">
+                      Showing <span className="text-[#ffc107]">{filteredRestaurants.length}</span> restaurants within <span className="text-[#ffc107]">{maxDistance}km</span>
+                      {fromCache && <span className="text-gray-500 text-sm italic ml-2">(from cache)</span>}
+                    </p>
+                    
+                    {fromCache && (
+                      <button 
+                        onClick={handleClearCache}
+                        className="flex items-center gap-2 text-xs px-3 py-1 rounded bg-[#1c1c1c] hover:bg-[#ffc107] hover:text-black text-gray-400 transition-colors border border-gray-700 hover:border-[#ffc107]"
+                      >
+                        <RefreshCw size={14} />
+                        <span>Get Fresh Data</span>
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Cuisine filters */}
+                  <div className="mb-10">
+                    <h3 className="text-center text-sm uppercase tracking-wider text-gray-400 mb-4">Filter by Cuisine</h3>
+                    <div className="flex flex-wrap justify-center gap-3">
+                      <button
+                        onClick={() => handleCuisineSelect(null)}
+                        className={`px-4 py-1 rounded-full text-sm ${
+                          selectedCuisine === null 
+                            ? 'bg-[#ffc107] text-black' 
+                            : 'bg-[#1c1c1c] text-gray-300 hover:bg-[#333]'
+                        }`}
+                      >
+                        All
+                      </button>
+                      {['Turkish', 'Indian', 'Italian', 'American', 'Lebanese', 'Mediterranean', 'Asian'].map(cuisine => (
+                        <button
+                          key={cuisine}
+                          onClick={() => handleCuisineSelect(cuisine.toLowerCase())}
+                          className={`px-4 py-1 rounded-full text-sm ${
+                            selectedCuisine === cuisine.toLowerCase() 
+                              ? 'bg-[#ffc107] text-black' 
+                              : 'bg-[#1c1c1c] text-gray-300 hover:bg-[#333]'
+                          }`}
+                        >
+                          {cuisine}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="mb-16 rounded-none overflow-hidden border border-gray-800">
@@ -521,7 +662,7 @@ export default function Home() {
               { id: "persian", name: "Persian", image: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1935&q=80", price: "$25", dish: "Chelow Kebab" },
             ].map((cuisine, index) => (
               <Link 
-                href={`/search?cuisine=${cuisine.id}`} 
+                href={`/restaurants?cuisine=${cuisine.id}`} 
                 key={index}
                 className="group relative overflow-hidden border border-gray-800 bg-[#090909] hover:border-[#ffc107]/30 transition-all duration-500 rounded-lg block"
               >
@@ -555,7 +696,7 @@ export default function Home() {
           </div>
           
           <div className="text-center mt-12">
-            <Link href="/search" className="inline-flex items-center justify-center bg-[#0a0a0a] border border-[#ffc107] text-[#ffc107] hover:bg-[#ffc107] hover:text-[#0a0a0a] px-8 py-3 rounded-sm uppercase text-sm tracking-wider font-bold transition-colors duration-300">
+            <Link href="/restaurants" className="inline-flex items-center justify-center bg-[#0a0a0a] border border-[#ffc107] text-[#ffc107] hover:bg-[#ffc107] hover:text-[#0a0a0a] px-8 py-3 rounded-sm uppercase text-sm tracking-wider font-medium">
               Explore All Cuisines
               <ChevronRight className="ml-2 h-4 w-4" />
             </Link>
@@ -622,12 +763,8 @@ export default function Home() {
                   <span>Ottawa, ON, Canada</span>
                 </p>
                 <p className="flex items-center space-x-3 text-gray-400">
-                  <Phone className="h-5 w-5 text-[#ffc107]" />
-                  <span>+1 613-555-5555</span>
-                </p>
-                <p className="flex items-center space-x-3 text-gray-400">
                   <Mail className="h-5 w-5 text-[#ffc107]" />
-                  <span>info@halalfinder.com</span>
+                  <span>alihaidar2950@gmail.com</span>
                 </p>
               </div>
             </div>

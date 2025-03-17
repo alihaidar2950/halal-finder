@@ -90,7 +90,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
               <MapPin className="mr-2 h-5 w-5" />
               Find Nearby Restaurants
             </Link>
-            <Link href="/search" className="bg-[#232323] hover:bg-[#343434] text-white border border-[#ffc107] px-6 py-3 rounded-none flex items-center">
+            <Link href="/restaurants" className="bg-[#232323] hover:bg-[#343434] text-white border border-[#ffc107] px-6 py-3 rounded-none flex items-center">
               <Search className="mr-2 h-5 w-5" />
               Search All Restaurants
             </Link>

@@ -36,6 +36,8 @@ const CUISINE_MAPPINGS: Record<string, string[]> = {
 };
 
 // Define cuisine-specific food indicators
+// Currently not used but kept for future feature implementation
+/*
 const CUISINE_FOOD_INDICATORS: Record<string, string[]> = {
   'american': ['burger', 'hot dog', 'french fries', 'steak', 'bbq', 'barbecue', 'wings', 'sandwich', 'fries'],
   'asian': ['wok', 'noodle', 'sushi', 'pho', 'ramen', 'dumpling', 'dim sum', 'korean bbq', 'boba'],
@@ -47,6 +49,7 @@ const CUISINE_FOOD_INDICATORS: Record<string, string[]> = {
   'italian': ['pizza', 'pasta', 'risotto', 'gelato', 'lasagna', 'spaghetti', 'caprese'],
   'mexican': ['taco', 'burrito', 'quesadilla', 'enchilada', 'tortilla', 'guacamole', 'salsa']
 };
+*/
 
 // Define common American restaurant chains to help with identification
 const AMERICAN_RESTAURANT_CHAINS = [
@@ -118,6 +121,18 @@ export async function GET(request: NextRequest) {
       API_CALLS.resetDate = today;
     }
     
+    // If forcing refresh, clear the cache for the current search parameters
+    if (forceRefresh) {
+      // Build cache key for the current request
+      const cacheKey = `${lat}-${lng}-${radius}-${keyword}-${pagetoken || ''}-${cuisine || 'no_cuisine'}`;
+      
+      // Remove specific cached result if it exists
+      restaurantCache.delete(cacheKey);
+      
+      // Log cache clearing for debugging
+      console.log('Forcing refresh - cleared cache for:', cacheKey);
+    }
+    
     // Check if we've exceeded our self-imposed daily limit
     if (API_CALLS.dailyCount >= API_CALLS.dailyLimit) {
       // Return cached data or limited results if available
@@ -137,7 +152,8 @@ export async function GET(request: NextRequest) {
     }
     
     // Build unique cache key based on request parameters
-    const cacheKey = `${lat}-${lng}-${radius}-${keyword}-${pagetoken || ''}-${cuisine || ''}`;
+    // Always include cuisine parameter in the key to properly separate cuisine-specific caches
+    const cacheKey = `${lat}-${lng}-${radius}-${keyword}-${pagetoken || ''}-${cuisine || 'no_cuisine'}`;
     
     // Only check cache if not forcing a refresh
     if (!forceRefresh) {
@@ -148,10 +164,16 @@ export async function GET(request: NextRequest) {
       }
       
       // If no exact match, try to find a nearby cached result
-      const proximityResult = findClosestCachedResult(parseFloat(lat), parseFloat(lng), parseInt(radius));
-      if (proximityResult) {
-        return NextResponse.json({ restaurants: proximityResult.data, fromCache: true, proximityBased: true });
+      // BUT ONLY if there's no cuisine filter (don't mix cuisine results)
+      if (!cuisine) {
+        const proximityResult = findClosestCachedResult(parseFloat(lat), parseFloat(lng), parseInt(radius));
+        if (proximityResult) {
+          return NextResponse.json({ restaurants: proximityResult.data, fromCache: true, proximityBased: true });
+        }
       }
+    } else {
+      // If forcing refresh, log it for debugging
+      console.log('Forcing refresh - bypassing all caching for:', cacheKey);
     }
     
     // Rate limiting: Ensure minimum time between API calls

@@ -68,8 +68,8 @@ export default function ContactPage() {
             </div>
             <h3 className="text-xl font-bold mb-2">Email</h3>
             <p className="text-gray-400 mb-4">For general inquiries and support</p>
-            <a href="mailto:info@halalfinder.com" className="text-[#ffc107] hover:underline">
-              info@halalfinder.com
+            <a href="mailto:alihaidar2950@gmail.com" className="text-[#ffc107] hover:underline">
+              alihaidar2950@gmail.com
             </a>
           </div>
 
@@ -77,11 +77,6 @@ export default function ContactPage() {
             <div className="flex justify-center mb-6">
               <Phone className="h-12 w-12 text-[#ffc107]" />
             </div>
-            <h3 className="text-xl font-bold mb-2">Phone</h3>
-            <p className="text-gray-400 mb-4">Available Monday-Friday, 9am-5pm</p>
-            <a href="tel:+1234567890" className="text-[#ffc107] hover:underline">
-              +1 (234) 567-890
-            </a>
           </div>
 
           <div className="bg-[#121212] border border-gray-800 p-8 rounded-lg text-center">

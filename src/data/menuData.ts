@@ -52,7 +52,7 @@ export const cuisineTypes: CuisineType[] = [
   { id: 'lebanese', name: 'Lebanese', icon: '🧆' },
   { id: 'turkish', name: 'Turkish', icon: '🥙' },
   { id: 'italian', name: 'Italian', icon: '🍕' },
-  { id: 'mexican', name: 'Mexican', icon: '🌮' }
+  { id: 'middle_eastern', name: 'Middle Eastern', icon: '🫓' }
 ];
 
 // An empty array instead of hardcoded dummy restaurants

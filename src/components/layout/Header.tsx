@@ -23,7 +23,6 @@ export default function Header() {
         <nav className="hidden md:flex space-x-8 absolute left-1/2 transform -translate-x-1/2">
           <Link href="/" className="uppercase text-sm tracking-wider hover:text-[#ffc107]">HOME</Link>
           <Link href="/restaurants" className="uppercase text-sm tracking-wider hover:text-[#ffc107]">RESTAURANTS</Link>
-          <Link href="/search" className="uppercase text-sm tracking-wider hover:text-[#ffc107]">SEARCH</Link>
           <Link href="/favorites" className="uppercase text-sm tracking-wider hover:text-[#ffc107]">FAVORITES</Link>
           <Link href="/about" className="uppercase text-sm tracking-wider hover:text-[#ffc107]">ABOUT</Link>
           <Link href="/contact" className="uppercase text-sm tracking-wider hover:text-[#ffc107]">CONTACT</Link>
@@ -31,7 +30,7 @@ export default function Header() {
 
         {/* Mobile Menu Button */}
         <div className="flex items-center space-x-4">
-          <Link href="/search" className="hover:text-[#ffc107]">
+          <Link href="/restaurants" className="hover:text-[#ffc107]">
             <Search className="h-5 w-5" />
           </Link>
           
@@ -81,13 +80,6 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 RESTAURANTS
-              </Link>
-              <Link 
-                href="/search" 
-                className="text-xl uppercase tracking-wider"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                SEARCH
               </Link>
               <Link 
                 href="/favorites" 

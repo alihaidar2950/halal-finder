@@ -179,7 +179,7 @@ export function getNearbyCachedItem<T>(
           minDistance = distance;
           nearestMatch = cacheItem.data;
         }
-      } catch (_) {
+      } catch {
         continue; // Skip invalid items
       }
     }
@@ -327,11 +327,13 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 // Generate a cache key for search results
-export function generateSearchCacheKey(query: string, lat: number, lng: number, radius: number): string {
+export function generateSearchCacheKey(query: string, lat: number, lng: number, radius: number, cuisine?: string): string {
   // Round coordinates to 3 decimal places to allow for small variations in location
   const roundedLat = Math.round(lat * 1000) / 1000;
   const roundedLng = Math.round(lng * 1000) / 1000;
-  return `halal_finder_search_${query}_${roundedLat}_${roundedLng}_${radius}`;
+  // Include cuisine in the cache key if provided
+  const cuisineString = cuisine ? `_${cuisine}` : '';
+  return `halal_finder_search_${query}_${roundedLat}_${roundedLng}_${radius}${cuisineString}`;
 }
 
 // Generate a cache key for nearby restaurants

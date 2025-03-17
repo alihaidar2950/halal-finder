@@ -23,7 +23,6 @@ export default function Footer() {
             <ul className="space-y-3">
               <li><Link href="/" className="text-gray-300 hover:text-[#ffc107]">HOME</Link></li>
               <li><Link href="/restaurants" className="text-gray-300 hover:text-[#ffc107]">RESTAURANTS</Link></li>
-              <li><Link href="/search" className="text-gray-300 hover:text-[#ffc107]">SEARCH</Link></li>
               <li><Link href="/favorites" className="text-gray-300 hover:text-[#ffc107]">FAVORITES</Link></li>
               <li><Link href="/about" className="text-gray-300 hover:text-[#ffc107]">ABOUT</Link></li>
               <li><Link href="/contact" className="text-gray-300 hover:text-[#ffc107]">CONTACT</Link></li>
@@ -34,15 +33,12 @@ export default function Footer() {
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-[#ffc107] mt-0.5" />
-                <span className="text-gray-300">123 Main Street, City, Country</span>
+                <span className="text-gray-300">Ottawa, ON, Canada</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <Phone className="h-5 w-5 text-[#ffc107]" />
-                <span className="text-gray-300">+1 234 567 890</span>
-              </div>
+
               <div className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-[#ffc107]" />
-                <span className="text-gray-300">info@halalfinder.com</span>
+                <span className="text-gray-300">alihaidar2950@gmail.com</span>
               </div>
               <div className="flex space-x-4 mt-4">
                 <Link href="#" aria-label="Facebook" className="h-10 w-10 rounded-full border border-gray-700 flex items-center justify-center text-gray-300 hover:text-[#ffc107] hover:border-[#ffc107]">
