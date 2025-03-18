@@ -1,116 +1,89 @@
 # 🍽️ Halal Finder
 
-A modern web application built with Next.js that helps users discover and explore halal restaurants in their area.
+![Halal Finder Banner](https://github.com/user-attachments/assets/d007ab2c-fcef-4ad7-a97a-1b38fa6af069)
 
-![image](https://github.com/user-attachments/assets/d007ab2c-fcef-4ad7-a97a-1b38fa6af069)
+## What is Halal Finder?
 
+Halal Finder is a modern web application designed to solve a common challenge for Muslim communities worldwide: finding restaurants that serve halal food. Using location-based technology and data from Google Maps, Halal Finder makes it easy to discover, explore, and get directions to halal dining options near you.
 
+## The Problem We're Solving
 
-## ✨ Features
+For Muslims who follow halal dietary guidelines, finding suitable dining options can be challenging, especially when:
+- Traveling to unfamiliar areas
+- Living in regions where halal options are limited
+- Wanting to verify the authenticity of halal claims
+- Needing to know if a restaurant is fully halal or just offers halal options
 
-- **Nearby Halal Restaurants**: Find halal dining options close to your location
-- **Custom Halal Classification System**: Restaurants are classified into different halal status categories:
-  - **Fully Halal**: Restaurants that are completely halal, typically with halal certification
-  - **Halal Options**: Restaurants that offer some halal dishes but may also serve non-halal items
-  - **Halal Ingredients**: Establishments that use halal ingredients or can accommodate halal requirements
-- **Restaurant Details**: View comprehensive information about each restaurant including:
-  - Photos, reviews, and ratings
-  - Contact information and opening hours
-  - Detailed halal status with confidence rating
-- **Search & Filtering**: Search for restaurants by name, filter by cuisine type, and sort by distance
-- **Location-Based Results**: View restaurants within customizable distance radius
-- **Interactive Maps**: Visualize restaurant locations on an integrated Google Map
-- **Cuisine Categories**: Browse restaurants by cuisine type
-- **Responsive Design**: Optimized for both desktop and mobile devices
+## How Halal Finder Works
 
-## 🛠️ Tech Stack
+1. **Locate You**: The app uses your device's geolocation to find your position (with your permission)
+2. **Find Nearby Restaurants**: We search for restaurants within your chosen radius 
+3. **Analyze Halal Status**: Our custom algorithm analyzes restaurant data to classify halal status
+4. **Present Options**: Results are displayed in an easy-to-browse format with all the information you need
+5. **Get You There**: Integrated directions via Google Maps help you navigate to your chosen restaurant
 
-- **Frontend**:
-  - [Next.js 14](https://nextjs.org/) with App Router
-  - [React 18](https://reactjs.org/)
-  - [TypeScript](https://www.typescriptlang.org/)
-  - [Tailwind CSS](https://tailwindcss.com/) for styling
-  - [Shadcn UI](https://ui.shadcn.com/) for UI components
-  - [Lucide React](https://lucide.dev/) for icons
+## Key Features
 
-- **APIs & Services**:
-  - [Google Places API](https://developers.google.com/maps/documentation/places/web-service/overview) for restaurant data
-  - [Google Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/overview) for maps integration
+### Core Functionality
+- **Location-Based Search**: Find halal restaurants near your current location
+- **Custom Search**: Look for specific cuisines or restaurant names
+- **Intelligent Filters**: Narrow results by distance and cuisine type
+- **Detailed Restaurant Profiles**: View photos, opening hours, contact information, and more
+- **Direction Integration**: Get driving, walking, cycling, or public transit directions
 
-## 🚀 Getting Started
+### Halal Status Classification
+Our application automatically classifies restaurants into three halal categories:
 
-### Prerequisites
+- 🟢 **Fully Halal**: Completely halal restaurants, often certified
+- 🟡 **Halal Options**: Restaurants that offer halal menu items but may serve non-halal food
+- 🟠 **Halal Ingredients**: Establishments that use halal ingredients or can prepare halal food on request
 
-- Node.js 18.0 or later
-- npm or yarn
-- Google Maps API Key
+Each classification includes a confidence rating based on our analysis of available information.
 
-### Environment Setup
+### User Experience Features
+- **Responsive Design**: Works beautifully on mobile, tablet, and desktop
+- **Smart Caching**: Fast performance with reduced API calls
+- **Favorites**: Save restaurants you love for quick access
+- **Dark Theme**: Easy on the eyes with a modern dark interface
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/halal-finder.git
-   cd halal-finder
-   ```
+## Technology Stack
 
-2. Install dependencies:
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
+Built with modern web technologies:
+- **Next.js 15** with App Router for smooth page transitions
+- **React 18** for dynamic user interfaces
+- **TypeScript** for code reliability
+- **Tailwind CSS** for beautiful responsive design
+- **Google Maps & Places APIs** for location data
 
-3. Create a `.env.local` file in the root directory with your Google Maps API key:
-   ```
-   GOOGLE_MAPS_API_KEY=your_api_key_here
-   ```
+## Getting Started
 
-4. Start the development server:
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   ```
+Visit our live site at [halalfinder.example.com](https://halalfinder.example.com) to start using Halal Finder now!
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
+### Running Locally (for Developers)
 
-## 🌟 Custom Halal Classification System
+1. Clone the repository
+2. Install dependencies with `npm install`
+3. Create a `.env.local` file with your Google Maps API key
+4. Run the development server with `npm run dev`
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-Our application features a sophisticated algorithm that analyzes restaurant data to determine halal status:
+## Future Roadmap
 
-1. **Text Analysis**: Examines restaurant names, descriptions, reviews, and cuisine types
-2. **Keyword Matching**: Searches for halal-related keywords and phrases
-3. **Confidence Scoring**: Provides a confidence rating for each classification
-4. **Visual Indicators**: Color-coded badges make it easy to identify halal status at a glance
+We're continuously improving Halal Finder with planned features including:
+- User-submitted reviews and halal verifications
+- Restaurant owner verification portal
+- Mobile app versions for iOS and Android
+- Multi-language support
+- Offline capabilities
 
-## 📱 Application Structure
+## Contributing
 
-- **Homepage**: Features hero section, search bar, and curated cuisine categories
-- **Nearby Page**: Shows halal restaurants near the user's location with distance filtering
-- **Restaurant Detail Page**: Comprehensive view of restaurant information and halal status
-- **Cuisine Pages**: Browse restaurants by specific cuisine types
-- **Search Page**: Search for restaurants with advanced filtering options
+We welcome contributions! Whether it's adding features, reporting bugs, or improving documentation, check out our [contribution guidelines](CONTRIBUTING.md) to get started.
 
-## 🔄 API Routes
-
-- `/api/restaurants`: Fetch nearby halal restaurants with location parameters
-- `/api/restaurants/[id]`: Get detailed information about a specific restaurant
-
-## 🔜 Future Enhancements
-
-- User authentication and personalized experiences
-- Restaurant owner verification and halal certification uploads
-- User reviews and community verification of halal status
-- Advanced filtering (price range, rating, etc.)
-- Online reservation system
-- Mobile app version
-
-## 📝 License
+## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🙏 Acknowledgements
+---
 
-- Google Maps Platform for location and restaurant data
-- Next.js team for the amazing framework
-- All contributors to the open-source libraries used in this project
+**Halal Finder** — *Making halal dining easier, anywhere in the world.*
