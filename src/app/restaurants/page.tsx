@@ -116,12 +116,6 @@ function RestaurantsContent() {
           setDebugInfo(prev => [...prev, `Location error: ${locationError instanceof Error ? locationError.message : 'Unknown error'}`]);
         }
         
-        // Check if we should force refresh
-        const forceRefresh = searchParams.get("forceRefresh") === "true";
-        if (forceRefresh) {
-          setDebugInfo(prev => [...prev, "Force refresh requested, bypassing cache"]);
-        }
-        
         // Generate cache key
         const radius = maxDistance * 1000; // Convert km to meters
         const searchTerm = query || cuisineFilter || "";
@@ -133,31 +127,34 @@ function RestaurantsContent() {
           cuisineFilter || undefined
         );
         setCacheKey(computedCacheKey);
+
+        // Check if we should force refresh 
+        const forceRefresh = searchParams.get("forceRefresh") === "true";
         
-        // Try to get cached results
-        let cachedResults = null;
-        if (!forceRefresh) {
-          cachedResults = getFromCache<RestaurantWithDistance[]>(computedCacheKey);
+        // Don't check cache for search queries to ensure fresh results
+        const shouldBypassCache = forceRefresh || !!query;
+
+        if (shouldBypassCache) {
+          setDebugInfo(prev => [...prev, "Bypassing cache for search or forced refresh"]);
+        } else {
+          // Try to get cached results for non-search requests
+          const cachedResults = getFromCache<RestaurantWithDistance[]>(computedCacheKey);
           
           if (cachedResults) {
             setDebugInfo(prev => [...prev, `Using cached results for: ${computedCacheKey}`]);
+            setRestaurants(cachedResults);
+            setLoading(false);
+            setFromCache(true);
+            
+            // Set error message if using default location
+            if (usingDefaultLocation) {
+              setError("Using default location (Ottawa, Canada). Enable location services for better results.");
+            } else {
+              setError(null);
+            }
+            
+            return;
           }
-        }
-        
-        if (cachedResults) {
-          // Use cached results
-          setRestaurants(cachedResults);
-          setLoading(false);
-          setFromCache(true);
-          
-          // Set error message if using default location
-          if (usingDefaultLocation) {
-            setError("Using default location (Ottawa, Canada). Enable location services for better results.");
-          } else {
-            setError(null);
-          }
-          
-          return;
         }
         
         // Build API URL for fresh results
@@ -175,14 +172,20 @@ function RestaurantsContent() {
           apiUrl += `&cuisine=${encodeURIComponent(cuisineFilter)}`;
         }
         
-        if (forceRefresh) {
-          apiUrl += `&refresh=true`;
-        }
+        // Add cache-busting header to prevent browser caching
+        const fetchOptions = {
+          method: "GET",
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        };
         
         setDebugInfo(prev => [...prev, `API URL: ${apiUrl}`]);
         
         // Fetch restaurants
-        const response = await fetch(apiUrl, { method: "GET" });
+        const response = await fetch(apiUrl, fetchOptions);
         
         if (!response.ok) {
           throw new Error(`API request failed with status: ${response.status}`);
@@ -191,8 +194,8 @@ function RestaurantsContent() {
         const data = await response.json();
         const results = data.restaurants || [];
         
-        // Save to cache if we have results
-        if (results.length > 0) {
+        // Save to cache if we have results (except for search queries)
+        if (results.length > 0 && !query) {
           saveToCache(computedCacheKey, results, CACHE_EXPIRY.SEARCH_RESULTS);
         }
         

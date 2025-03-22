@@ -1,13 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Client } from '@googlemaps/google-maps-services-js';
+import axios from 'axios';
 import { classifyHalalStatus } from '@/utils/halal/classifier';
 import { saveToCache, getFromCache, generateRestaurantDetailsCacheKey, CACHE_EXPIRY } from '@/utils/cacheUtils';
 
-// Initialize Google Maps client
-const client = new Client({});
-
 // Cache settings
 const PLACE_DETAILS_CACHE_TTL = CACHE_EXPIRY.RESTAURANT_DETAILS; // 72 hours
+
+// Define essential field masks for reduced costs (Places API v1)
+// Documentation: https://developers.google.com/maps/documentation/places/web-service/field-masks
+const PLACE_DETAILS_FIELD_MASK = [
+  'name',
+  'id',
+  'formattedAddress',
+  'internationalPhoneNumber',
+  'location',
+  'rating',
+  'userRatingCount',
+  'photos.name',
+  'priceLevel',
+  'types',
+  'websiteUri'
+].join(',');
 
 // Daily API call limit tracking
 const API_CALLS = {
@@ -18,9 +31,9 @@ const API_CALLS = {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const placeId = params.id;
+  const placeId = context.params.id;
   
   if (!placeId) {
     return NextResponse.json({ error: 'Missing place ID' }, { status: 400 });
@@ -60,73 +73,53 @@ export async function GET(
     // Increment API call counter
     API_CALLS.count++;
     
+    // Google Places API v1 endpoint
+    const apiUrl = `https://places.googleapis.com/v1/places/${placeId}`;
+    
     // Make API request
-    const response = await client.placeDetails({
-      params: {
-        place_id: placeId,
-        fields: [
-          'name',
-          'place_id',
-          'formatted_address',
-          'formatted_phone_number',
-          'geometry',
-          'opening_hours',
-          'photos',
-          'price_level',
-          'rating',
-          'reviews',
-          'types',
-          'url',
-          'user_ratings_total',
-          'website',
-          'vicinity'
-        ],
-        key: process.env.GOOGLE_MAPS_API_KEY || '',
-      },
+    const response = await axios.get(apiUrl, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': process.env.GOOGLE_MAPS_API_KEY || '',
+        'X-Goog-FieldMask': PLACE_DETAILS_FIELD_MASK
+      }
     });
 
-    if (response.data.status !== 'OK') {
-      console.error('Google API error:', response.data.status);
-      return NextResponse.json({ error: 'Failed to fetch restaurant details' }, { status: 500 });
-    }
-
-    const place = response.data.result;
-    
     // Process and format the response
-    const restaurant = {
-      id: place.place_id || '',
-      placeId: place.place_id || '',
-      name: place.name || '',
-      cuisineType: place.types?.filter(type => 
+    const place = response.data;
+    
+    // Extract cuisine type from place types
+    const cuisineType = (place.types || [])
+      .filter((type: string) => 
         !['restaurant', 'food', 'point_of_interest', 'establishment'].includes(type)
-      ).join(', ') || 'Restaurant',
+      ).join(', ') || 'Restaurant';
+    
+    // Process and format the response for our application
+    const restaurant = {
+      id: place.id || '',
+      placeId: place.id || '',
+      name: place.displayName?.text || '',
+      cuisineType: cuisineType.charAt(0).toUpperCase() + cuisineType.slice(1),
       rating: place.rating || 0,
-      address: place.formatted_address || place.vicinity || '',
-      phone: place.formatted_phone_number || '',
+      address: place.formattedAddress || '',
+      phone: place.internationalPhoneNumber || '',
       coordinates: {
-        lat: place.geometry?.location.lat || 0,
-        lng: place.geometry?.location.lng || 0
+        lat: place.location?.latitude || 0,
+        lng: place.location?.longitude || 0
       },
-      openingHours: place.opening_hours?.weekday_text || [],
-      priceLevel: place.price_level || 0,
-      website: place.website || place.url || '',
-      photos: place.photos?.map(photo => 
-        `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference=${photo.photo_reference}&key=${process.env.GOOGLE_MAPS_API_KEY}`
+      priceLevel: place.priceLevel || 0,
+      website: place.websiteUri || '',
+      // Use smaller image sizes to reduce bandwidth and cost
+      photos: place.photos?.map((photo: { name: string }) => 
+        `https://places.googleapis.com/v1/${photo.name}/media?key=${process.env.GOOGLE_MAPS_API_KEY}&maxHeightPx=600&maxWidthPx=600`
       ) || [],
       // Add the first photo as the main image
       image: place.photos && place.photos.length > 0 
-        ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photoreference=${place.photos[0].photo_reference}&key=${process.env.GOOGLE_MAPS_API_KEY}`
+        ? `https://places.googleapis.com/v1/${place.photos[0].name}/media?key=${process.env.GOOGLE_MAPS_API_KEY}&maxHeightPx=800&maxWidthPx=800`
         : '',
-      reviews: place.reviews?.map(review => ({
-        author: review.author_name,
-        rating: review.rating,
-        text: review.text,
-        time: review.time,
-        profilePhotoUrl: review.profile_photo_url
-      })) || [],
-      reviewCount: place.user_ratings_total || 0,
+      reviewCount: place.userRatingCount || 0,
       description: '',
-      priceRange: priceRangeToDollarSigns(place.price_level || 0),
+      priceRange: priceRangeToDollarSigns(place.priceLevel || 0),
     };
     
     // Store in cache with location data for better proximity searches
@@ -159,10 +152,6 @@ export async function GET(
     return NextResponse.json({ error: 'Failed to fetch restaurant details' }, { status: 500 });
   }
 }
-
-// Helper function to parse opening hours
-
-// Helper function to infer cuisine type from place types
 
 // Helper function to convert price level to dollar signs
 function priceRangeToDollarSigns(priceLevel: number): string {

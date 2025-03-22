@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
-import { clearCache } from "@/utils/cacheUtils";
 
 export default function SearchBar() {
   const [query, setQuery] = useState("");
@@ -12,13 +11,15 @@ export default function SearchBar() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Clear the cache for new searches to ensure fresh results
-    clearCache();
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) return;
+
+    // Log search for analytics
+    console.log(`[SEARCH] User searched for: "${trimmedQuery}"`);
     
-    if (query.trim()) {
-      // Add forceRefresh parameter to ensure we get fresh results
-      router.push(`/restaurants?q=${encodeURIComponent(query.trim())}&forceRefresh=true`);
-    }
+    // Don't clear cache for every search - that wastes precious API calls
+    // Only add the force refresh parameter to ensure the specific search gets fresh results
+    router.push(`/restaurants?q=${encodeURIComponent(trimmedQuery)}&forceRefresh=true&_=${Date.now()}`);
   };
 
   return (
